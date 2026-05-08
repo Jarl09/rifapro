@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "dev": "node server.mjs",
+    "kill-port": "for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :3001') do taskkill /F /PID %a",
+    "restart": "npm run kill-port && npm run dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1"
+  }
+}
+

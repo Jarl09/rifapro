@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src http://localhost:3001;">
+<title>RifaFortuna RD · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — DARK THEME (default)
+══════════════════════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg:        #0A0C12;
+  --surface:   #111318;
+  --surface2:  #181B23;
+  --surface3:  #1E2230;
+
+  /* Borders */
+  --border:    #252A3A;
+  --border2:   #2E3446;
+
+  /* Text */
+  --text:      #E2E8F8;
+  --text-2:    #8B95B0;
+  --text-3:    #4E5A78;
+
+  /* Brand / Accent */
+  --accent:    #4F7EF7;
+  --accent-dim: rgba(79,126,247,0.12);
+  --accent-border: rgba(79,126,247,0.28);
+
+  /* Semantic */
+  --success:       #27C07A;
+  --success-dim:   rgba(39,192,122,0.10);
+  --success-border:rgba(39,192,122,0.25);
+
+  --danger:        #E84646;
+  --danger-dim:    rgba(232,70,70,0.10);
+  --danger-border: rgba(232,70,70,0.25);
+
+  --warning:       #F0A940;
+  --warning-dim:   rgba(240,169,64,0.10);
+  --warning-border:rgba(240,169,64,0.25);
+
+  --info:          #38C0D8;
+  --info-dim:      rgba(56,192,216,0.10);
+
+  /* UI */
+  --radius:    10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --shadow:    0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+
+  /* Sidebar width */
+  --sidebar-w: 240px;
+
+  /* Theme toggle icon */
+  --theme-icon: "☀";
+}
+
+/* ── LIGHT THEME ────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:        #F4F6FB;
+  --surface:   #FFFFFF;
+  --surface2:  #F0F2F8;
+  --surface3:  #E8EBF4;
+
+  --border:    #DDE1EE;
+  --border2:   #CDD2E4;
+
+  --text:      #1A1F35;
+  --text-2:    #5A6585;
+  --text-3:    #9099B8;
+
+  --accent:    #3B6EE8;
+  --accent-dim: rgba(59,110,232,0.08);
+  --accent-border: rgba(59,110,232,0.22);
+
+  --success:       #1EA667;
+  --success-dim:   rgba(30,166,103,0.09);
+  --success-border:rgba(30,166,103,0.22);
+
+  --danger:        #D83535;
+  --danger-dim:    rgba(216,53,53,0.09);
+  --danger-border: rgba(216,53,53,0.22);
+
+  --warning:       #C78A10;
+  --warning-dim:   rgba(199,138,16,0.09);
+  --warning-border:rgba(199,138,16,0.22);
+
+  --info:          #1A9CB5;
+  --info-dim:      rgba(26,156,181,0.09);
+
+  --shadow:    0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
+
+  --theme-icon: "☾";
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.25s, color 0.25s;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════════════════════ */
+#loginScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+#loginScreen::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.login-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 1;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.login-brand-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px var(--accent-border);
+}
+
+.login-logo {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.login-logo em { font-style: normal; color: var(--accent); }
+
+.login-sub {
+  color: var(--text-2);
+  font-size: 13px;
+  margin-bottom: 28px;
+  margin-left: 48px;
+}
+
+.demo-hint {
+  margin-top: 16px;
+  padding: 11px 14px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.demo-hint strong { color: var(--accent); font-weight: 600; }
+
+/* ══════════════════════════════════════════════════════════
+   APP LAYOUT
+══════════════════════════════════════════════════════════ */
+#appScreen { display: none; }
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════ */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.sidebar-header {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sidebar-brand-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--accent-border);
+}
+
+.sidebar-logo {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.sidebar-logo em { font-style: normal; color: var(--accent); }
+
+/* Theme toggle button */
+.btn-theme {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.btn-theme:hover { background: var(--surface3); color: var(--text); }
+
+.sidebar-section {
+  padding: 18px 0 4px;
+}
+
+.sidebar-label {
+  padding: 0 18px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  border-radius: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 450;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+}
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+  transition: background 0.15s;
+}
+.nav-btn:hover { color: var(--text); background: var(--surface2); }
+.nav-btn.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  font-weight: 500;
+}
+.nav-btn.active::before { background: var(--accent); }
+
+.nav-ic {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+.nav-btn.active .nav-ic { opacity: 1; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 50px;
+  min-width: 18px;
+  text-align: center;
+  display: none;
+}
+.nav-badge.show { display: block; }
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+.user-details { overflow: hidden; flex: 1; min-width: 0; }
+.user-email {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-rol { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+
+.session-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════════════════════════ */
+.main {
+  padding: 28px 32px;
+  max-width: 920px;
+  min-width: 0;
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+  gap: 12px;
+}
+.page-header-left { display: flex; flex-direction: column; gap: 2px; }
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+.page-subtitle { font-size: 13px; color: var(--text-2); }
+.page-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+
+.card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.card-body-text {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FORMS
+══════════════════════════════════════════════════════════ */
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  letter-spacing: 0.1px;
+}
+.field-hint {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-top: 5px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="datetime-local"],
+textarea,
+select {
+  width: 100%;
+  padding: 9px 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.25s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--surface);
+}
+input::placeholder, textarea::placeholder { color: var(--text-3); }
+textarea { resize: vertical; min-height: 90px; }
+
+/* datetime-local special treatment */
+input[type="datetime-local"] {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color-scheme: dark;
+}
+[data-theme="light"] input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+/* File input */
+input[type="file"] {
+  width: 100%;
+  padding: 10px 13px;
+  background: var(--surface2);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+input[type="file"]:hover { border-color: var(--accent); }
+
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ══════════════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--accent-border);
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: 0 4px 16px var(--accent-border);
+}
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover:not(:disabled) { opacity: 0.88; }
+.btn-danger  { background: var(--danger);  color: #fff; }
+.btn-danger:hover:not(:disabled)  { opacity: 0.88; }
+.btn-warning { background: var(--warning); color: #fff; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--border2);
+  background: var(--surface2);
+}
+
+.btn-sm   { padding: 5px 12px; font-size: 12.5px; border-radius: var(--radius-sm); }
+.btn-xs   { padding: 4px 10px; font-size: 11.5px; border-radius: var(--radius-sm); }
+.btn-full { width: 100%; justify-content: center; }
+.btn-icon { padding: 7px; }
+
+/* ══════════════════════════════════════════════════════════
+   MESSAGES / ALERTS
+══════════════════════════════════════════════════════════ */
+.msg {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+.msg.success {
+  background: var(--success-dim);
+  color: var(--success);
+  display: flex;
+  border: 1px solid var(--success-border);
+}
+.msg.error {
+  background: var(--danger-dim);
+  color: var(--danger);
+  display: flex;
+  border: 1px solid var(--danger-border);
+}
+.msg.info {
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  border: 1px solid var(--accent-border);
+}
+
+/* ══════════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  margin-bottom: 20px;
+  width: fit-content;
+}
+.tab {
+  padding: 7px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.tab:hover:not(.active) { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════════════════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.25s;
+}
+.stat::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  background: var(--stat-color, var(--accent));
+  opacity: 0.04;
+  border-radius: 0 0 0 60px;
+}
+.stat:hover { border-color: var(--border2); }
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 26px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.stat-sub {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-top: 5px;
+}
+
+.c-accent  { color: var(--accent); }
+.c-success { color: var(--success); }
+.c-warning { color: var(--warning); }
+.c-danger  { color: var(--danger); }
+
+/* ══════════════════════════════════════════════════════════
+   PROGRESS BAR
+══════════════════════════════════════════════════════════ */
+.prog-wrap {
+  background: var(--surface3);
+  border-radius: 50px;
+  height: 7px;
+  overflow: hidden;
+  margin: 8px 0 5px;
+}
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #6B9EFF);
+  border-radius: 50px;
+  transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.prog-fill.green  { background: linear-gradient(90deg, var(--success), #5CE8A0); }
+.prog-fill.orange { background: linear-gradient(90deg, var(--warning), #FFD080); }
+
+.alerta-80 {
+  display: none;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--success-dim);
+  border: 1px solid var(--success-border);
+  font-size: 12px;
+  color: var(--success);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════
+   COMPRAS PENDIENTES
+══════════════════════════════════════════════════════════ */
+.compra {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.15s, opacity 0.3s;
+}
+
+.compra:hover {
+  border-color: var(--border2);
+}
+
+.compra img {
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.c-nombre {
+  font-weight: 700;
+  font-size: 17px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.c-meta {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 2;
+}
+
+.c-acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+/* ══════════════════════════════════════════════════════════
+   TABLA COMPRADORES
+══════════════════════════════════════════════════════════ */
+.tbl-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--surface2); position: sticky; top: 0; z-index: 1; }
+th {
+  padding: 10px 13px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+.td-mono    { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-2); }
+.td-boletos { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text); }
+
+/* ── Tabla compradores mobile ── */
+@media (max-width: 640px) {
+  .tbl-wrap {
+    border-radius: var(--radius-sm);
+  }
+  table { font-size: 12px; }
+  th { padding: 8px 10px; font-size: 10px; }
+  td { padding: 8px 10px; }
+  /* Ocultar columnas de bajo valor en móvil; datos siguen en DOM para exportación */
+  .col-metodo { display: none; }
+  .col-num    { display: none; }
+  .td-boletos { display: none; }
+}
+.search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.search-row input   { max-width: 260px; }
+.search-row select  { max-width: 160px; }
+.export-btns { display: flex; gap: 8px; margin-left: auto; }
+
+/* ══════════════════════════════════════════════════════════
+   USUARIOS
+══════════════════════════════════════════════════════════ */
+.usuario-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 8px;
+  background: var(--surface);
+  transition: border-color 0.15s;
+  gap: 12px;
+}
+.usuario-row:hover { border-color: var(--border2); }
+.u-info { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.u-avatar {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  flex-shrink: 0;
+}
+.u-email { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.u-meta  { font-size: 11.5px; color: var(--text-2); margin-top: 2px; }
+
+/* ══════════════════════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.badge-sa        { background: var(--accent-dim);   color: var(--accent);   border: 1px solid var(--accent-border); }
+.badge-enc       { background: var(--success-dim);  color: var(--success);  border: 1px solid var(--success-border); }
+.badge-off       { background: var(--surface3);     color: var(--text-3);   border: 1px solid var(--border); }
+.badge-aprobado  { background: var(--success-dim);  color: var(--success);  border: 1px solid var(--success-border); }
+.badge-pendiente { background: var(--warning-dim);  color: var(--warning);  border: 1px solid var(--warning-border); }
+.badge-rechazado { background: rgba(220, 38, 38, 0.10);  color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.22);}
+
+/* ══════════════════════════════════════════════════════════
+   AUDITORÍA
+═══════════════════════════════════════════════════════ */
+.audit-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.audit-row {
+  display: grid;
+  grid-template-columns: 148px 160px 1fr;
+  padding: 10px 14px;
+  gap: 12px;
+  align-items: start;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+  transition: background 0.1s;
+}
+.audit-row:last-child { border-bottom: none; }
+.audit-row:not(.audit-head):hover { background: var(--surface2); }
+.audit-head {
+  background: var(--surface2);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  border-bottom: 1px solid var(--border);
+}
+.audit-time {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.audit-who  { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.audit-what { color: var(--text-2); line-height: 1.5; }
+
+/* ══════════════════════════════════════════════════════════
+   RESUMEN RIFA CARD
+══════════════════════════════════════════════════════════ */
+.rifa-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+  font-size: 13px;
+}
+.rifa-summary-item {}
+.rifa-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.rifa-summary-value { color: var(--text); font-weight: 500; }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE MENU TOGGLE
+══════════════════════════════════════════════════════════ */
+.menu-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.menu-toggle:hover { background: var(--surface2); }
+
+/* Overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 998;
+}
+.sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+/* ══════════════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════════════ */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
+.spin { display: inline-block; animation: spin 0.75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* Inline label-value pair for rifa summary */
+.kv { display: flex; gap: 8px; font-size: 13px; line-height: 2.2; color: var(--text-2); }
+.kv strong { color: var(--text); font-weight: 500; }
+
+/* Compra resumen bottom bar */
+.compradores-resumen-bar {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-2);
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.compradores-resumen-bar span strong { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — TABLET (≤ 980px)
+══════════════════════════════════════════════════════════ */
+@media (max-width: 980px) {
+  .layout { display: block; }
+
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 270px;
+    height: 100%;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .main {
+    width: 100%;
+    max-width: 100%;
+    padding: 18px 20px;
+  }
+
+  .menu-toggle { display: inline-flex; }
+
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+
+  .field-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 640px)
+══════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .sidebar { width: 88%; max-width: 300px; }
+
+  .main { padding: 14px 16px; }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .page-title { font-size: 19px; }
+
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { padding: 13px 14px; }
+  .stat-value { font-size: 22px; }
+
+  .field-row { grid-template-columns: 1fr; }
+
+  .compra {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .compra img { width: 100%; height: 180px; }
+  .c-acciones { flex-direction: row; }
+
+  .audit-row { grid-template-columns: 1fr; gap: 4px; }
+  .audit-head { display: none; }
+
+  .search-row { flex-direction: column; align-items: stretch; }
+  .search-row input,
+  .search-row select { max-width: 100%; }
+  .export-btns { margin-left: 0; }
+
+  .usuario-row { flex-wrap: wrap; }
+
+  .tabs { width: 100%; }
+  .tab { flex: 1; text-align: center; }
+
+  .rifa-summary { grid-template-columns: 1fr; }
+
+  .compradores-resumen-bar { gap: 12px; }
+
+  .login-box { padding: 30px 22px; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   SCROLLBAR STYLE
+══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 50px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+/* ══════════════════════════════════════════════════════════
+   TRANSITIONS for theme switching
+══════════════════════════════════════════════════════════ */
+.sidebar, .card, .compra, .usuario-row, .audit-table, .stat,
+input, select, textarea, .btn, .badge, .tabs, .tab, .msg {
+  transition-property: background, border-color, color, box-shadow;
+  transition-duration: 0.2s;
+}
+</style>
+</head>
+<body>
+
+<!-- ═════════════════ LOGIN ═════════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-brand-icon">R</div>
+      <div class="login-logo">Rifa<em>Fortuna</em> RD</div>
+    </div>
+    <p class="login-sub">Panel de administración</p>
+
+    <div class="field">
+      <label for="loginEmail">Correo electrónico</label>
+      <input type="email" id="loginEmail" placeholder="admin@email.com"
+             autocomplete="email" inputmode="email">
+    </div>
+    <div class="field">
+      <label for="loginPass">Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••"
+             autocomplete="current-password">
+    </div>
+
+    <button class="btn btn-primary btn-full" id="btnLogin" style="margin-top:8px;">
+      Iniciar sesión
+    </button>
+    <div id="loginMsg" class="msg" role="alert"></div>
+
+    <div class="demo-hint" id="demoHint" style="display:none;">
+      <strong>Modo demo:</strong> usa <strong>admin@demo.com</strong> y contraseña <strong>demo1234</strong>
+      para explorar sin servidor.
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════ APP ═════════════════ -->
+<div id="appScreen">
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">R</div>
+        <div class="sidebar-logo">Rifa<em>Fortuna</em> RD</div>
+      </div>
+      <button class="btn-theme" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema claro/oscuro">☀</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">General</div>
+      <button class="nav-btn active" data-sec="secInicio">
+        <span class="nav-ic">◈</span> Resumen
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Rifa</div>
+      <button class="nav-btn" data-sec="secRifa" id="navRifa" style="display:none;">
+        <span class="nav-ic">✦</span> Gestionar rifa
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Operaciones</div>
+      <button class="nav-btn" data-sec="secCompras">
+        <span class="nav-ic">❋</span> Compras pendientes
+        <span class="nav-badge" id="navBadgeCompras"></span>
+      </button>
+      <button class="nav-btn" data-sec="secCompradores">
+        <span class="nav-ic">☰</span> Compradores
+      </button>
+    </div>
+
+    <div class="sidebar-section" id="lblAdmin" style="display:none;">
+      <div class="sidebar-label">Administración</div>
+      <button class="nav-btn" data-sec="secUsuarios" id="navUsuarios" style="display:none;">
+        <span class="nav-ic">◉</span> Usuarios
+      </button>
+      <button class="nav-btn" data-sec="secAuditoria" id="navAuditoria" style="display:none;">
+        <span class="nav-ic">⌬</span> Auditoría
+      </button>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-details">
+          <div class="user-email" id="userEmail">—</div>
+          <div class="user-rol"   id="userRol">—</div>
+        </div>
+      </div>
+      <div class="session-timer" id="sessionTimer"></div>
+      <button class="btn btn-ghost btn-sm btn-full" id="btnLogout">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <button class="menu-toggle" id="menuToggle" type="button">
+      <span>☰</span> Menú
+    </button>
+
+    <!-- ══ RESUMEN ══ -->
+    <section class="section active" id="secInicio">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2 class="page-title">Resumen</h2>
+          <span class="page-subtitle">Vista general de la rifa activa</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" id="btnRefresh">↺ Actualizar</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat" style="--stat-color:var(--accent)">
+          <div class="stat-label">Boletos vendidos</div>
+          <div class="stat-value c-accent" id="stVendidos">—</div>
+          <div class="stat-sub" id="stVendidosDetalle">de — totales</div>
+        </div>
+        <div class="stat" style="--stat-color:var(--success)">
+          <div class="stat-label">Disponibles</div>
+          <div class="stat-value c-success" id="stDisponibles">—</div>
+          <div class="stat-sub">boletos libres</div>
+        </div>
+        <div class="stat" style="--stat-color:var(--warning)">
+          <div class="stat-label">Pendientes</div>
+          <div class="stat-value c-warning" id="stPendientes">—</div>
+          <div class="stat-sub">por revisar</div>
+        </div>
+        <div class="stat" style="--stat-color:var(--accent)">
+          <div class="stat-label">Recaudado</div>
+          <div class="stat-value c-accent" id="stRecaudado" style="font-size:18px; letter-spacing:-0.5px;">—</div>
+          <div class="stat-sub">RD$ aprobados</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Avance de ventas</span>
+          <span id="stPorcentaje" style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); font-weight:600;">0%</span>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-fill" id="stBarra" style="width:0%"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-2); margin-top:6px;">
+          <span id="stBarraLabel">0 vendidos</span>
+          <span id="stBarraMeta" style="color:var(--warning);">Meta 80%: — boletos</span>
+        </div>
+        <div class="alerta-80" id="stAlerta80">
+          ✓ Se alcanzó el 80% — la fecha del sorteo ya puede revelarse públicamente.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Rifa actual</span>
+        </div>
+        <div id="resumenRifa" class="card-body-text">Cargando...</div>
+      </div>
+    </section>
+
+    <!-- ══ GESTIONAR RIFA ══ -->
+    <section class="section" id="secRifa">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2 class="page-title">Gestionar rifa</h2>
+          <span class="page-subtitle">Crear o editar la rifa activa</span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="tabNueva">Nueva rifa</button>
+        <button class="tab"        data-tab="tabEditar">Editar rifa actual</button>
+      </div>
+
+      <!-- NUEVA -->
+      <div id="tabNueva">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Crear nueva rifa</span>
+          </div>
+          <div class="field">
+            <label for="n_titulo">Título del premio</label>
+            <input type="text" id="n_titulo" placeholder="Ej. iPhone 16 Pro Max" maxlength="200">
+          </div>
+          <div class="field">
+            <label for="n_desc">Descripción</label>
+            <textarea id="n_desc" placeholder="Describe el premio y condiciones..." maxlength="1000"></textarea>
+          </div>
+          <div class="field">
+            <label for="n_imagen">Imagen del premio</label>
+            <input type="file" id="n_imagen" accept="image/jpeg,image/png,image/webp">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="n_precio">Precio por boleto (RD$)</label>
+              <input type="number" id="n_precio" placeholder="100" min="1">
+            </div>
+            <div class="field">
+              <label for="n_min">Mínimo de boletos</label>
+              <input type="number" id="n_min" placeholder="1" min="1" value="1">
+            </div>
+          </div>
+          <div class="field">
+            <label for="n_total">Total de boletos</label>
+            <input type="number" id="n_total" placeholder="100" min="1">
+          </div> 
+          <button class="btn btn-primary" id="btnCrearRifa">Crear rifa</button>
+          <div id="msgNueva" class="msg" role="alert"></div>
+        </div>
+      </div>
+
+      <!-- EDITAR -->
+      <div id="tabEditar" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Editar rifa actual</span>
+          </div>
+          <input type="hidden" id="e_id">
+          <div id="editCargando" style="color:var(--text-2); font-size:13px;">Cargando...</div>
+          <div id="editForm" style="display:none;">
+            <div class="field">
+              <label for="e_titulo">Título</label>
+              <input type="text" id="e_titulo" maxlength="200">
+            </div>
+            <div class="field">
+              <label for="e_desc">Descripción</label>
+              <textarea id="e_desc" maxlength="1000"></textarea>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="e_precio">Precio por boleto (RD$)</label>
+                <input type="number" id="e_precio" min="1">
+              </div>
+              <div class="field">
+                <label for="e_total_boletos">Total de boletos</label>
+                <input type="number" id="e_total_boletos" min="1" max="10000">
+              </div>
+              <div class="field">
+                <label for="e_fecha">Fecha del sorteo</label>
+                <input type="datetime-local" id="e_fecha">
+              </div>
+              <div class="field">
+              <label for="e_imagen">Nueva imagen (opcional)</label>
+              <input type="file" id="e_imagen" accept="image/png,image/jpeg,image/jpg">
+              <small class="hint">Solo sube una nueva imagen si deseas reemplazar la actual.</small>
+            </div>
+
+            <div class="field">
+              
+              <img id="e_preview" src="" alt="Vista previa" style="width:100%; max-width:320px; border-radius:12px; display:none; margin-top:8px;">
+            </div>
+            </div>
+            <button class="btn btn-primary" id="btnEditarRifa">Guardar cambios</button>
+            <div id="msgEditar" class="msg" role="alert"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ COMPRAS ══ -->
+    <section class="section" id="secCompras">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2 class="page-title">Compras pendientes</h2>
+          <span class="page-subtitle">Aprobar o rechazar comprobantes</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" id="btnRecargarCompras">↺ Recargar</button>
+        </div>
+      </div>
+      <div id="comprasMsg" class="msg" role="alert"></div>
+      <div id="listaCompras"></div>
+    </section>
+
+    <!-- ══ COMPRADORES ══ -->
+    <section class="section" id="secCompradores">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2 class="page-title">Compradores</h2>
+          <span class="page-subtitle">Registro completo de participantes</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" id="btnRecargarCompradores">↺ Recargar</button>
+        </div>
+      </div>
+      <div class="card" style="padding-bottom:16px;">
+        <div class="search-row">
+          <input type="text" id="buscarComprador" placeholder="Buscar nombre, teléfono o boleto…">
+          <select id="filtroEstado">
+            <option value="">Todas</option>
+            <option value="aprobado">Aprobadas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="rechazado">Rechazadas</option>
+          </select>
+          <div class="export-btns">
+            <button class="btn btn-ghost btn-sm" id="btnExcelCompradores">↓ Excel</button>
+            <button class="btn btn-ghost btn-sm" id="btnPdfCompradores">↓ PDF</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>Teléfono</th><th>Boletos</th>
+                <th class="col-num">Números</th><th>Monto RD$</th><th class="col-metodo">Método</th><th>Estado</th><th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyCompradores">
+              <tr><td colspan="9" class="empty">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="compradoresResumen" class="compradores-resumen-bar"></div>
+      </div>
+    </section>
+
+    <!-- ══ USUARIOS ══ -->
+    <section class="section" id="secUsuarios">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2 class="page-title">Usuarios</h2>
+          <span class="page-subtitle">Gestión de acceso al panel</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" id="btnRecargarUsuarios">↺ Recargar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Crear nuevo usuario</span>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="u_email">Email</label>
+            <input type="email" id="u_email" placeholder="encargado@email.com">
+          </div>
+          <div class="field">
+            <label for="u_rol">Rol</label>
+            <select id="u_rol">
+              <option value="encargado">Encargado</option>
+              <option value="superadmin">Superadmin</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="u_pass">Contraseña</label>
+          <input type="password" id="u_pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+          <span class="field-hint">La contraseña debe tener al menos 8 caracteres.</span>
+        </div>
+        <button class="btn btn-primary" id="btnCrearUsuario">Crear usuario</button>
+        <div class="divider"></div>
+
+<div class="field">
+  <label for="adminNewPass">Nueva contraseña de acceso</label>
+  <input type="password" id="adminNewPass" placeholder="Nueva contraseña">
+</div>
+
+<div class="field">
+  <label for="adminConfirmPass">Confirmar contraseña</label>
+  <input type="password" id="adminConfirmPass" placeholder="Repite la contraseña">
+</div>
+
+<button class="btn btn-warning" id="btnCambiarPass">
+  Cambiar contraseña de acceso
+</button>
+
+<div id="msgPass" class="msg"></div>
+        <div id="msgUsuario" class="msg" role="alert"></div>
+      </div>
+      <div id="listaUsuarios"></div>
+    </section>
+
+    <!-- ══ AUDITORÍA ══ -->
+    <section class="section" id="secAuditoria">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2 class="page-title">Auditoría</h2>
+          <span class="page-subtitle">Últimas 100 acciones del sistema</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" id="btnRecargarAudit">↺ Recargar</button>
+        </div>
+      </div>
+      <div class="audit-table">
+        <div class="audit-row audit-head">
+          <span>Fecha y hora</span><span>Usuario</span><span>Acción</span>
+        </div>
+        <div id="listaAudit"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+</div>
+
+<script>
+'use strict'
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THEME — persisted in localStorage
+// ═══════════════════════════════════════════════════════════════════════════════
+;(function() {
+  const saved = localStorage.getItem('rfrd_theme') || 'dark'
+  document.documentElement.setAttribute('data-theme', saved)
+  // update icon after DOM loads
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnTheme')
+    if (btn) btn.textContent = saved === 'dark' ? '☀' : '☾'
+  })
+})()
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnTheme = document.getElementById('btnTheme')
+  if (btnTheme) {
+    btnTheme.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme')
+      const next = current === 'dark' ? 'light' : 'dark'
+      document.documentElement.setAttribute('data-theme', next)
+      localStorage.setItem('rfrd_theme', next)
+      btnTheme.textContent = next === 'dark' ? '☀' : '☾'
+    })
+  }
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════════════════════
+const API = 'http://localhost:3001'
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SESIÓN EN MEMORIA (nunca localStorage — evita XSS)
+// ═══════════════════════════════════════════════════════════════════════════════
+const SESSION_KEY = 'admin_session'
+
+const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') || {
+  token: null,
+  rol: null,
+  email: null,
+  expiresAt: null,
+  isDemo: false
+}
+
+const persistSession = () => {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+}
+
+const getToken = () => session.token
+
+const isValid = () => {
+  return !!session.token && !!session.expiresAt && Date.now() < session.expiresAt
+}
+
+const setSession = (data, demo = false) => {
+  session.token = data.token
+  session.rol = data.rol
+  session.email = data.email
+  session.expiresAt = Date.now() + ((data.expiresIn || 28800) * 1000) // 8h
+  session.isDemo = demo
+  persistSession()
+}
+
+const clearSession = () => {
+  session.token = null
+  session.rol = null
+  session.email = null
+  session.expiresAt = null
+  session.isDemo = false
+  localStorage.removeItem(SESSION_KEY)
+}
+// ═══════════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+const esc = str => { const d = document.createElement('div'); d.textContent = String(str ?? ''); return d.innerHTML }
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.textContent = text
+  el.className = 'msg ' + type
+}
+
+function hideMsg(id) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.className = 'msg'
+  el.textContent = ''
+}
+
+function setBtn(btn, loading, text) {
+  btn.disabled = loading
+  btn.innerHTML = loading ? '<span class="spin">↻</span> ' + text : text
+}
+
+// fetch autenticado con timeout
+async function apiFetch(path, opts = {}) {
+  if (!isValid()) { doLogout(); throw new Error('Sesión expirada') }
+  if (session.isDemo) throw new Error('Modo demo — conecta el servidor para usar esta función')
+
+  const res = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: { ...(opts.headers || {}), Authorization: `Bearer ${getToken()}` },
+    signal: AbortSignal.timeout(12000),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Error del servidor')
+  return data
+}
+
+// fetch público (sin token)
+async function pubFetch(path) {
+  const res = await fetch(`${API}${path}`, { signal: AbortSignal.timeout(8000) })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Error del servidor')
+  return data
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════════════════════════════
+async function intentarLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase()
+  const pass  = document.getElementById('loginPass').value.trim()
+  const btn   = document.getElementById('btnLogin')
+
+  if (!email || !pass) return
+
+  setBtn(btn, true, 'Verificando...')
+  hideMsg('loginMsg')
+
+  try {
+    const data = await fetch(`${API}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass }),
+      signal: AbortSignal.timeout(8000),
+    }).then(async r => {
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Credenciales incorrectas')
+      return d
+    })
+
+    setSession(data)
+    document.getElementById('loginPass').value = ''
+    iniciarApp()
+
+  } catch (err) {
+    const esConexion = err.name === 'TypeError' || err.name === 'TimeoutError'
+    if (esConexion) {
+      showMsg('loginMsg', 'No se puede conectar al servidor.', 'error')
+    } else {
+      showMsg('loginMsg', err.message || 'Credenciales incorrectas', 'error')
+    }
+  } finally {
+    setBtn(btn, false, 'Iniciar sesión')
+  }
+}
+
+document.getElementById('btnLogin').addEventListener('click', intentarLogin)
+document.getElementById('loginPass').addEventListener('keydown',  e => { if (e.key === 'Enter') intentarLogin() })
+document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus() })
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  LOGOUT
+// ═══════════════════════════════════════════════════════════════════════════════
+function doLogout() {
+  clearSession()
+  if (timerInterval) clearInterval(timerInterval)
+  timerInterval = null
+  document.getElementById('appScreen').style.display    = 'none'
+  document.getElementById('loginScreen').style.display  = 'flex'
+  document.getElementById('loginEmail').value = ''
+  document.getElementById('loginPass').value  = ''
+  document.getElementById('demoHint').style.display = 'none'
+}
+
+document.getElementById('btnLogout').addEventListener('click', doLogout)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INICIAR APP
+// ═══════════════════════════════════════════════════════════════════════════════
+let timerInterval = null
+
+function iniciarApp() {
+  document.getElementById('loginScreen').style.display = 'none'
+  document.getElementById('appScreen').style.display   = 'block'
+
+  const email = session.email || ''
+  document.getElementById('userAvatar').textContent = email.charAt(0).toUpperCase()
+  document.getElementById('userEmail').textContent  = email
+  document.getElementById('userRol').textContent    = session.rol === 'superadmin' ? 'Superadmin' : 'Encargado'
+
+  if (session.rol === 'superadmin') {
+    ['lblAdmin', 'navRifa', 'navUsuarios', 'navAuditoria'].forEach(id => {
+      document.getElementById(id).style.display = ''
+    })
+  }
+
+  if (session.isDemo) {
+    document.getElementById('sessionTimer').textContent = 'Modo demo (sin servidor)'
+  } else {
+    function tick() {
+      const resta = Math.max(0, session.expiresAt - Date.now())
+      const h = Math.floor(resta / 3_600_000)
+      const m = Math.floor((resta % 3_600_000) / 60_000)
+      document.getElementById('sessionTimer').textContent = `Sesión: ${h}h ${m}m`
+      if (resta === 0) doLogout()
+    }
+    tick()
+    timerInterval = setInterval(tick, 30_000)
+  }
+
+  cargarResumen()
+  cargarCompras()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SIDEBAR MOBILE
+// ═══════════════════════════════════════════════════════════════════════════════
+const menuToggle    = document.getElementById('menuToggle')
+const sidebar       = document.querySelector('.sidebar')
+const sidebarOverlay = document.getElementById('sidebarOverlay')
+const navBtns       = document.querySelectorAll('.nav-btn')
+
+function closeSidebar() {
+  sidebar.classList.remove('open')
+  sidebarOverlay?.classList.remove('show')
+}
+
+function openSidebar() {
+  sidebar.classList.add('open')
+  sidebarOverlay?.classList.add('show')
+}
+
+menuToggle?.addEventListener('click', () => {
+  sidebar.classList.contains('open') ? closeSidebar() : openSidebar()
+})
+
+sidebarOverlay?.addEventListener('click', closeSidebar)
+
+navBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (window.innerWidth <= 980) closeSidebar()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ═══════════════════════════════════════════════════════════════════════════════
+const SEC_LOADERS = {
+  secInicio:      () => cargarResumen(),
+  secCompras:     () => cargarCompras(),
+  secCompradores: () => cargarCompradores(),
+  secUsuarios:    () => cargarUsuarios(),
+  secAuditoria:   () => cargarAuditoria(),
+}
+
+const USERS_LOCK_KEY = 'usuarios_lock_password'
+
+// contraseña inicial SOLO la primera vez
+if (!localStorage.getItem(USERS_LOCK_KEY)) {
+  localStorage.setItem(USERS_LOCK_KEY, 'admin1234')
+}
+
+// limpiar espacios accidentales
+function getUsersPassword() {
+  return (localStorage.getItem(USERS_LOCK_KEY) || '').trim()
+}
+
+document.querySelectorAll('.nav-btn[data-sec]').forEach(btn => {
+  btn.addEventListener('click', function() {
+
+    const secId = this.dataset.sec
+
+    // proteger usuarios
+    if (secId === 'secUsuarios') {
+
+      const savedPass = getUsersPassword()
+
+      const intento = prompt('Introduce la contraseña de acceso')
+
+      if (!intento) return
+
+      if (intento.trim() !== savedPass) {
+        alert('Contraseña incorrecta')
+        return
+      }
+    }
+
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      b.classList.remove('active')
+    })
+
+    document.querySelectorAll('.section').forEach(s => {
+      s.classList.remove('active')
+    })
+
+    this.classList.add('active')
+
+    document.getElementById(secId).classList.add('active')
+
+    SEC_LOADERS[secId]?.()
+  })
+})
+
+// Tabs de rifa
+document.querySelectorAll('.tab[data-tab]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    this.classList.add('active')
+    document.getElementById('tabNueva').style.display  = 'none'
+    document.getElementById('tabEditar').style.display = 'none'
+    document.getElementById(this.dataset.tab).style.display = 'block'
+    if (this.dataset.tab === 'tabEditar') cargarConfigParaEditar()
+          })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  RESUMEN
+// ═══════════════════════════════════════════════════════════════════════════════
+async function cargarResumen() {
+  try {
+    const [prog, conf] = await Promise.all([
+      pubFetch('/progreso').catch(() => ({})),
+      pubFetch('/config').catch(() => ({})),
+    ])
+
+    const vendidos    = Number(prog.vendidos   ?? 0)
+    const total       = Number(prog.total      ?? 0)
+    const porcentaje  = Number(prog.porcentaje ?? 0)
+    const disponibles = Math.max(0, total - vendidos)
+    const meta80      = Math.ceil(total * 0.8)
+
+    document.getElementById('stVendidos').textContent        = vendidos.toLocaleString()
+    document.getElementById('stVendidosDetalle').textContent = `de ${total.toLocaleString()} totales`
+    document.getElementById('stDisponibles').textContent     = disponibles.toLocaleString()
+
+    // Progress bar color based on percentage
+    const barra = document.getElementById('stBarra')
+    barra.style.width = Math.min(100, porcentaje) + '%'
+    barra.className = 'prog-fill' + (porcentaje >= 80 ? ' green' : porcentaje >= 50 ? '' : ' orange')
+
+    document.getElementById('stPorcentaje').textContent  = `${porcentaje}%`
+    document.getElementById('stBarraLabel').textContent  = `${vendidos.toLocaleString()} de ${total.toLocaleString()} vendidos`
+    document.getElementById('stBarraMeta').textContent   = `Meta 80%: ${meta80.toLocaleString()} boletos`
+    document.getElementById('stAlerta80').style.display  = porcentaje >= 80 ? 'block' : 'none'
+    document.getElementById('stRecaudado').textContent   = `RD$ ${Number(prog.recaudado || 0).toLocaleString()}`
+
+    // Pendientes
+    try {
+    const p = await apiFetch('/admin/pendientes')
+      const count = Array.isArray(p) ? p.length : 0
+      document.getElementById('stPendientes').textContent = count
+      // Update nav badge
+      const badge = document.getElementById('navBadgeCompras')
+      if (badge) {
+        badge.textContent = count
+        badge.classList.toggle('show', count > 0)
+      }
+    } catch {
+      document.getElementById('stPendientes').textContent = session.isDemo ? '0' : '—'
+    }
+
+    const el = document.getElementById('resumenRifa')
+    if (conf?.titulo) {
+      const colorEstado = { activa: 'var(--success)', pausada: 'var(--warning)', finalizada: 'var(--text-2)' }
+      const fechaTexto  = conf.fecha_sorteo
+        ? new Date(conf.fecha_sorteo).toLocaleDateString('es-DO', { dateStyle: 'long' })
+        : 'Sin fecha asignada'
+      el.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+          <strong style="color:var(--text); font-size:15px;">${esc(conf.titulo)}</strong>
+          <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 9px; background:${colorEstado[conf.estado] ? colorEstado[conf.estado].replace('var(','').replace(')','') + '11' : 'var(--surface3)'}; border-radius:50px; font-size:11px; font-weight:600; color:${colorEstado[conf.estado] ?? 'var(--text-2)'}">
+            ● ${esc(conf.estado)}
+          </span>
+        </div>
+        <div class="rifa-summary">
+          <div class="rifa-summary-item">
+            <div class="rifa-summary-label">Precio por boleto</div>
+            <div class="rifa-summary-value">RD$ ${Number(conf.precio ?? 0).toLocaleString()}</div>
+          </div>
+          <div class="rifa-summary-item">
+            <div class="rifa-summary-label">Mínimo de boletos</div>
+            <div class="rifa-summary-value">${Number(conf.min_boletos ?? 1)}</div>
+          </div>
+          <div class="rifa-summary-item" style="grid-column: 1 / -1;">
+            <div class="rifa-summary-label">Fecha del sorteo</div>
+            <div class="rifa-summary-value">${esc(fechaTexto)}</div>
+          </div>
+        </div>`
+    } else {
+      el.textContent = session.isDemo ? 'Modo demo — sin datos reales' : 'Sin rifa configurada'
+    }
+  } catch (err) {
+    document.getElementById('resumenRifa').textContent = 'Error cargando datos'
+  }
+}
+
+document.getElementById('btnRefresh').addEventListener('click', cargarResumen)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  NUEVA RIFA
+// ═══════════════════════════════════════════════════════════════════════════════
+let creandoRifa = false
+
+document.getElementById('btnCrearRifa').addEventListener('click', async function () {
+  if (creandoRifa) return
+
+  const btn = this
+  hideMsg('msgNueva')
+
+  const titulo = document.getElementById('n_titulo').value.trim()
+  const desc   = document.getElementById('n_desc').value.trim()
+  const imagen = document.getElementById('n_imagen').files[0]
+  const precio = Number(document.getElementById('n_precio').value)
+  const min    = Number(document.getElementById('n_min').value || 1)
+  const total  = Number(document.getElementById('n_total').value)
+
+  if (titulo.length < 6) {
+    return showMsg('msgNueva', 'El título debe tener al menos 6 caracteres.', 'error')
+  }
+
+  if (desc.length < 15) {
+    return showMsg('msgNueva', 'La descripción debe tener al menos 15 caracteres.', 'error')
+  }
+
+  if (!precio || precio <= 0) {
+    return showMsg('msgNueva', 'El precio debe ser mayor a 0.', 'error')
+  }
+
+  if (!total || total < 10) {
+    return showMsg('msgNueva', 'La rifa debe tener al menos 10 boletos.', 'error')
+  }
+
+  if (!min || min < 1 || min > total) {
+    return showMsg('msgNueva', 'La compra mínima no es válida.', 'error')
+  }
+
+  creandoRifa = true
+  setBtn(btn, true, 'Guardando...')
+
+  try {
+    if (!isValid()) {
+      doLogout()
+      return
+    }
+
+    const fd = new FormData()
+    fd.append('titulo', titulo)
+    fd.append('descripcion', desc)
+    fd.append('precio', precio)
+    fd.append('total', total)
+    fd.append('min_boletos', min)
+    if (imagen) fd.append('imagen', imagen)
+
+    const res = await fetch(`${API}/admin/config`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: fd,
+      signal: AbortSignal.timeout(20000),
+    })
+
+    const text = await res.text()
+    let data = {}
+
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new Error(`Respuesta inválida del servidor: ${text}`)
+    }
+
+    if (!res.ok) throw new Error(data.error || 'Error guardando configuración')
+
+    showMsg('msgNueva', '✓ Rifa creada correctamente', 'success')
+
+    ;['n_titulo', 'n_desc', 'n_imagen', 'n_precio', 'n_total', 'n_min'].forEach(id => {
+      document.getElementById(id).value = ''
+    })
+
+    cargarResumen()
+  } catch (err) {
+    showMsg('msgNueva', err.message || 'Error guardando', 'error')
+  } finally {
+    creandoRifa = false
+    setBtn(btn, false, 'Crear rifa')
+  }
+})
+// ═══════════════════════════════════════════════════════════════════════════════
+//  EDITAR RIFA
+// ═══════════════════════════════════════════════════════════════════════════════
+async function cargarConfigParaEditar() {
+  document.getElementById('editCargando').style.display = 'block'
+  document.getElementById('editForm').style.display     = 'none'
+  hideMsg('msgEditar')
+
+  try {
+    const conf = await pubFetch('/config')
+
+    document.getElementById('e_id').value = conf.id || ''
+    document.getElementById('e_titulo').value = conf.titulo || ''
+    document.getElementById('e_desc').value = conf.descripcion || ''
+    document.getElementById('e_precio').value = conf.precio || ''
+
+    document.getElementById('e_total_boletos').value =
+      conf.total_boletos || 10000
+
+    if (conf.fecha_sorteo) {
+      const dt = new Date(conf.fecha_sorteo)
+
+      document.getElementById('e_fecha').value =
+        new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16)
+    }
+
+    document.getElementById('editCargando').style.display = 'none'
+    document.getElementById('editForm').style.display = 'block'
+
+  } catch (err) {
+    document.getElementById('editCargando').textContent =
+      'Error: ' + err.message
+  }
+}
+
+document.getElementById('btnEditarRifa').addEventListener('click', async function() {
+  const btn = this
+  hideMsg('msgEditar')
+
+  const id     = document.getElementById('e_id').value
+  const titulo = document.getElementById('e_titulo').value.trim()
+  const desc   = document.getElementById('e_desc').value.trim()
+  const precio = document.getElementById('e_precio').value
+  const fecha  = document.getElementById('e_fecha').value
+  const imagen = document.getElementById('e_imagen')?.files?.[0]
+
+  if (!id)                           { showMsg('msgEditar', 'No hay rifa activa', 'error'); return }
+  if (!titulo || !desc)              { showMsg('msgEditar', 'Completa título y descripción', 'error'); return }
+  if (precio && Number(precio) <= 0) { showMsg('msgEditar', 'El precio debe ser mayor a 0', 'error'); return }
+
+  setBtn(btn, true, 'Guardando...')
+
+  try {
+    const totalBoletos =
+  parseInt(
+    document.getElementById('e_total_boletos').value,
+    10
+  ) || 10000
+
+if (totalBoletos > 10000) {
+  showMsg(
+    'msgEditar',
+    'Máximo 10000 boletos',
+    'error'
+  )
+
+  setBtn(btn, false, 'Guardar cambios')
+
+  return
+}
+
+const fd = new FormData()
+
+fd.append('titulo', titulo)
+
+fd.append('descripcion', desc)
+
+fd.append(
+  'total_boletos',
+  totalBoletos
+)
+
+if (precio) {
+  fd.append('precio', precio)
+}
+
+if (fecha) {
+  fd.append('fecha_sorteo', fecha)
+}
+
+if (imagen) {
+  fd.append('imagen', imagen)
+}
+    
+
+    await apiFetch(`/admin/config/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: fd,
+    })
+    showMsg('msgEditar', '✓ Cambios guardados', 'success')
+    await Promise.all([
+      cargarResumen(),
+      cargarConfigParaEditar()
+    ])
+  } catch (err) {
+    showMsg('msgEditar', err.message || 'Error guardando', 'error')
+  } finally {
+    setBtn(btn, false, 'Guardar cambios')
+  }
+})
+// ═══════════════════════════════════════════════════════════════════════════════
+//  COMPRAS PENDIENTES
+// ═══════════════════════════════════════════════════════════════════════════════
+async function cargarCompras() {
+  hideMsg('comprasMsg')
+  document.getElementById('listaCompras').innerHTML = '<div class="empty"><span class="spin">↻</span></div>'
+
+  try {
+    const data = await apiFetch('/admin/pendientes')
+    renderCompras(Array.isArray(data) ? data : [])
+  } catch (err) {
+  showMsg('comprasMsg', err.message, 'error')
+  btnAprobar.disabled = btnRechazar.disabled = false
+  div.style.pointerEvents = ''
+  div.style.opacity = ''
+}
+}
+
+document.getElementById('btnRecargarCompras').addEventListener('click', cargarCompras)
+
+function renderCompras(lista) {
+  const cnt = document.getElementById('listaCompras')
+  if (!lista.length) {
+    cnt.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>Sin compras pendientes</div>'
+    return
+  }
+
+  const frag = document.createDocumentFragment()
+  lista.forEach(c => {
+    const div = document.createElement('div')
+    div.className = 'compra'
+
+    const img = document.createElement('img')
+    img.src = c.comprobante_url || ''
+    img.alt = 'Comprobante'
+    img.loading = 'lazy'
+    img.onerror = () => { img.style.visibility = 'hidden' }
+
+    const info = document.createElement('div')
+    info.innerHTML = `
+      <div class="c-nombre">${esc(c.nombre || '—')}</div>
+      <div class="c-meta">
+        📱 ${esc(c.telefono || '—')}<br>
+        🎟 ${Number(c.cantidad)} boleto${Number(c.cantidad)!==1?'s':''} · RD$ ${Number(c.monto).toLocaleString()}<br>
+        💳 ${esc(c.metodo_pago || '—')}<br>
+        🔢 ⏳ Esperando aprobación
+      </div>`
+
+    const acciones = document.createElement('div')
+    acciones.className = 'c-acciones'
+
+    const btnAprobar = document.createElement('button')
+    btnAprobar.className = 'btn btn-success btn-sm'
+    btnAprobar.textContent = '✓ Aprobar'
+
+    const btnRechazar = document.createElement('button')
+    btnRechazar.className = 'btn btn-ghost btn-sm'
+    btnRechazar.style.color = 'var(--danger)'
+    btnRechazar.style.borderColor = 'var(--danger-border)'
+    btnRechazar.textContent = '✕ Rechazar'
+
+    async function accion(tipo) {
+      btnAprobar.disabled = btnRechazar.disabled = true
+      div.style.pointerEvents = 'none'
+      div.style.opacity = '0.65'
+      try {
+        await apiFetch(`/admin/compras/${encodeURIComponent(c.id)}/${tipo}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+        })
+        div.style.opacity = '0.4'
+        setTimeout(() => { div.remove(); cargarResumen() }, 400)
+      } catch (err) {
+        showMsg('comprasMsg', err.message, 'error')
+        btnAprobar.disabled = btnRechazar.disabled = false
+      }
+    }
+
+    btnAprobar.addEventListener('click',  () => accion('aprobar'))
+    btnRechazar.addEventListener('click', () => accion('rechazar'))
+
+    acciones.appendChild(btnAprobar)
+    acciones.appendChild(btnRechazar)
+
+    div.appendChild(img)
+    div.appendChild(info)
+    div.appendChild(acciones)
+    frag.appendChild(div)
+  })
+
+  cnt.innerHTML = ''
+  cnt.appendChild(frag)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  COMPRADORES
+// ═══════════════════════════════════════════════════════════════════════════════
+let _compradores = []
+
+async function cargarCompradores() {
+  document.getElementById('tbodyCompradores').innerHTML =
+    '<tr><td colspan="9" class="empty"><span class="spin">↻</span></td></tr>'
+  try {
+    const data = await apiFetch('/admin/compradores')
+    _compradores = Array.isArray(data) ? data : []
+    aplicarFiltros()
+  } catch (err) {
+    document.getElementById('tbodyCompradores').innerHTML =
+      `<tr><td colspan="9" class="empty">${esc(err.message)}</td></tr>`
+  }
+}
+
+function aplicarFiltros() {
+  const q      = document.getElementById('buscarComprador').value.trim().toLowerCase()
+  const estado = document.getElementById('filtroEstado').value
+
+  const filtrados = _compradores.filter(c => {
+  const boletosTexto = Array.isArray(c.boletos) ? c.boletos.join(' ') : ''
+
+const matchQ =
+  !q ||
+  (c.nombre || '').toLowerCase().includes(q) ||
+  (c.telefono || '').includes(q) ||
+  boletosTexto.includes(q)
+    const matchE = !estado || c.estado === estado
+    return matchQ && matchE
+  })
+
+  const tbody = document.getElementById('tbodyCompradores')
+  if (!filtrados.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Sin resultados</td></tr>'
+    return
+  }
+
+  const frag = document.createDocumentFragment()
+  filtrados.forEach((c, i) => {
+    const tr = document.createElement('tr')
+    tr.innerHTML = `
+      <td class="td-mono" style="color:var(--text-3);">${i + 1}</td>
+      <td style="font-weight:500;">${esc(c.nombre || '—')}</td>
+      <td class="td-mono">${esc(c.telefono || '—')}</td>
+      <td class="td-mono" style="text-align:center;">${Number(c.cantidad)}</td>
+      <td class="td-boletos col-num" style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(Array.isArray(c.boletos) ? c.boletos.join(', ') : '')}">
+        ${esc(Array.isArray(c.boletos) ? c.boletos.join(', ') : '—')}
+      </td>
+      <td class="td-mono">RD$ ${Number(c.monto).toLocaleString()}</td>
+      <td class="col-metodo">${esc(c.metodo_pago || '—')}</td>
+    
+      <td><span class="badge badge-${c.estado === 'aprobado' ? 'aprobado' : c.estado === 'rechazado' ? 'rechazado' : 'pendiente'
+  }">
+    ${esc(c.estado || '—')}
+  </span>
+</td>
+      <td class="td-mono">${new Date(c.created_at).toLocaleDateString('es-DO')}</td>`
+    frag.appendChild(tr)
+  })
+
+  tbody.innerHTML = ''
+  tbody.appendChild(frag)
+
+  // Resumen
+  const aprobados = _compradores.filter(c => c.estado === 'aprobado')
+  const totalBol  = aprobados.reduce((s, c) => s + Number(c.cantidad), 0)
+  const recaudado = aprobados.reduce((s, c) => s + Number(c.monto), 0)
+  const el = document.getElementById('compradoresResumen')
+  if (!el) return
+  el.innerHTML = `
+    <span>Total: <strong style="color:var(--text);">${_compradores.length}</strong></span>
+    <span>Aprobados: <strong style="color:var(--success);">${aprobados.length}</strong></span>
+    <span>Pendientes: <strong style="color:var(--warning);">${(_compradores.length - aprobados.length)}</strong></span>
+    <span>Boletos: <strong style="color:var(--accent);">${totalBol.toLocaleString()}</strong></span>
+    <span>Recaudado: <strong style="color:var(--accent);">RD$ ${recaudado.toLocaleString()}</strong></span>`
+}
+
+document.getElementById('buscarComprador').addEventListener('input', aplicarFiltros)
+document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros)
+document.getElementById('btnRecargarCompradores').addEventListener('click', cargarCompradores)
+
+// ─── EXPORT EXCEL ─────────────────────────────────────────────────────────────
+document.getElementById('btnExcelCompradores').addEventListener('click', () => {
+  if (!_compradores.length) { alert('No hay datos para exportar'); return }
+
+  const filas = _compradores.map((c, i) => ({
+    '#':         i + 1,
+    'Nombre':    c.nombre       || '',
+    'Teléfono':  c.telefono     || '',
+    'Cantidad':  Number(c.cantidad),
+    'Números':   Array.isArray(c.boletos) ? c.boletos.join(', ') : '',
+    'Monto RD$': Number(c.monto),
+    'Método':    c.metodo_pago  || '',
+    'Estado':    c.estado       || '',
+    'Fecha':     new Date(c.created_at).toLocaleDateString('es-DO'),
+  }))
+
+  const ws = XLSX.utils.json_to_sheet(filas)
+  ws['!cols'] = [{ wch:4 },{ wch:28 },{ wch:16 },{ wch:10 },{ wch:30 },{ wch:12 },{ wch:14 },{ wch:12 },{ wch:14 }]
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Compradores')
+  XLSX.writeFile(wb, `compradores_${new Date().toISOString().slice(0,10)}.xlsx`)
+})
+
+// ─── EXPORT PDF ───────────────────────────────────────────────────────────────
+document.getElementById('btnPdfCompradores').addEventListener('click', () => {
+  if (!_compradores.length) { alert('No hay datos para exportar'); return }
+
+  const { jsPDF } = window.jspdf
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+
+  doc.setFontSize(16); doc.setTextColor(30,30,30)
+  doc.text('RifaFortuna RD — Listado de Compradores', 14, 16)
+  doc.setFontSize(9); doc.setTextColor(120,120,120)
+  doc.text(`Generado: ${new Date().toLocaleString('es-DO')}`, 14, 22)
+
+  const aprobados = _compradores.filter(c => c.estado === 'aprobado')
+  const recaudado = aprobados.reduce((s, c) => s + Number(c.monto), 0)
+  doc.text(`Compradores: ${_compradores.length}  |  Aprobados: ${aprobados.length}  |  Recaudado: RD$ ${recaudado.toLocaleString()}`, 14, 28)
+
+  doc.autoTable({
+    head: [['#','Nombre','Teléfono','Cant.','Números','Monto RD$','Método','Estado','Fecha']],
+    body: _compradores.map((c, i) => [
+      i + 1,
+      c.nombre || '',
+      c.telefono || '',
+      Number(c.cantidad),
+      Array.isArray(c.boletos) ? c.boletos.join(', ') : '',
+      `RD$ ${Number(c.monto).toLocaleString()}`,
+      c.metodo_pago || '',
+      c.estado || '',
+      new Date(c.created_at).toLocaleDateString('es-DO'),
+    ]),
+    startY: 34,
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [19,22,31], textColor: [180,190,210], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [248,248,252] },
+    columnStyles: { 0:{cellWidth:8},1:{cellWidth:44},2:{cellWidth:26},3:{cellWidth:12},4:{cellWidth:50},5:{cellWidth:22},6:{cellWidth:22},7:{cellWidth:20},8:{cellWidth:22} },
+  })
+
+  doc.save(`compradores_${new Date().toISOString().slice(0,10)}.pdf`)
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  USUARIOS
+// ═══════════════════════════════════════════════════════════════════════════════
+async function cargarUsuarios() {
+  document.getElementById('listaUsuarios').innerHTML = '<div class="empty"><span class="spin">↻</span></div>'
+  try {
+    const data = await apiFetch('/admin/usuarios')
+    renderUsuarios(Array.isArray(data) ? data : [])
+  } catch (err) {
+    document.getElementById('listaUsuarios').innerHTML = `<div class="empty">${esc(err.message)}</div>`
+  }
+}
+
+document.getElementById('btnRecargarUsuarios').addEventListener('click', cargarUsuarios)
+
+function renderUsuarios(lista) {
+  const cnt = document.getElementById('listaUsuarios')
+  if (!lista.length) { cnt.innerHTML = '<div class="empty">Sin usuarios registrados</div>'; return }
+
+  const frag = document.createDocumentFragment()
+  lista.forEach(u => {
+    const div = document.createElement('div')
+    div.className = 'usuario-row'
+
+    const info = document.createElement('div')
+    info.className = 'u-info'
+    info.innerHTML = `
+      <div class="u-avatar">${u.email.charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="u-email">
+          ${esc(u.email)}
+          <span class="badge ${u.rol === 'superadmin' ? 'badge-sa' : 'badge-enc'}">${u.rol}</span>
+          ${!u.activo ? '<span class="badge badge-off">Inactivo</span>' : ''}
+        </div>
+        <div class="u-meta">Creado: ${new Date(u.created_at).toLocaleDateString('es-DO')}</div>
+      </div>`
+
+    div.appendChild(info)
+
+    if (u.email !== session.email) {
+      const btn = document.createElement('button')
+      btn.className = `btn btn-sm ${u.activo ? 'btn-ghost' : 'btn-success'}`
+      btn.textContent = u.activo ? 'Desactivar' : 'Activar'
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await apiFetch(`/admin/usuarios/${u.id}`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              activo: !u.activo
+            }),
+          })
+          cargarUsuarios()
+        } catch (err) {
+          showMsg('msgUsuario', err.message, 'error')
+          btn.disabled = false
+        }
+      })
+      div.appendChild(btn)
+    }
+
+    frag.appendChild(div)
+  })
+
+  cnt.innerHTML = ''
+  cnt.appendChild(frag)
+}
+
+document.getElementById('btnCrearUsuario').addEventListener('click', async function() {
+  const btn   = this
+  const email = document.getElementById('u_email').value.trim()
+  const pass  = document.getElementById('u_pass').value
+  const rol   = document.getElementById('u_rol').value
+
+  hideMsg('msgUsuario')
+  if (!email || !pass)   { showMsg('msgUsuario', 'Completa email y contraseña', 'error'); return }
+  if (pass.length < 8)   { showMsg('msgUsuario', 'La contraseña debe tener al menos 8 caracteres', 'error'); return }
+
+  setBtn(btn, true, 'Creando...')
+  try {
+    await apiFetch('/admin/usuarios', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass, rol }),
+    })
+    showMsg('msgUsuario', `✓ Usuario ${email} creado`, 'success')
+    document.getElementById('u_email').value = ''
+    document.getElementById('u_pass').value  = ''
+    cargarUsuarios()
+  } catch (err) {
+    showMsg('msgUsuario', err.message, 'error')
+  } finally {
+    setBtn(btn, false, 'Crear usuario')
+  }
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  AUDITORÍA
+// ═══════════════════════════════════════════════════════════════════════════════
+const ACCION_LABELS = {
+  login:              'Inicio de sesión',
+  crear_rifa:         'Nueva rifa creada',
+  editar_rifa:        'Rifa editada',
+  aprobar_compra:     'Compra aprobada',
+  rechazar_compra:    'Compra rechazada',
+  crear_usuario:      'Usuario creado',
+  activar_usuario:    'Usuario activado',
+  desactivar_usuario: 'Usuario desactivado',
+}
+
+async function cargarAuditoria() {
+  document.getElementById('listaAudit').innerHTML = '<div class="empty"><span class="spin">↻</span></div>'
+  try {
+    const data = await apiFetch('/admin/auditoria?limit=100')
+    renderAuditoria(Array.isArray(data) ? data : [])
+  } catch (err) {
+    document.getElementById('listaAudit').innerHTML = `<div class="empty">${esc(err.message)}</div>`
+  }
+}
+
+document.getElementById('btnRecargarAudit').addEventListener('click', cargarAuditoria)
+
+function renderAuditoria(lista) {
+  const cnt = document.getElementById('listaAudit')
+  if (!lista.length) { cnt.innerHTML = '<div class="empty">Sin registros</div>'; return }
+
+  const frag = document.createDocumentFragment()
+  lista.forEach(r => {
+    const row = document.createElement('div')
+    row.className = 'audit-row'
+
+    const fecha = document.createElement('span')
+    fecha.className = 'audit-time'
+    fecha.textContent = new Date(r.created_at).toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' })
+
+    const who = document.createElement('span')
+    who.className = 'audit-who'
+    who.textContent = r.usuario_email || '—'
+    who.title = r.usuario_email || ''
+
+    const what = document.createElement('span')
+    what.className = 'audit-what'
+    const label   = ACCION_LABELS[r.accion] || r.accion
+    const detalle = r.detalle
+      ? Object.entries(r.detalle).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(' · ')
+      : ''
+    what.textContent = detalle ? `${label} — ${detalle}` : label
+
+    row.append(fecha, who, what)
+    frag.appendChild(row)
+  })
+
+  cnt.innerHTML = ''
+  cnt.appendChild(frag)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  EXPIRACIÓN DE SESIÓN
+// ═══════════════════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  if (isValid()) {
+    iniciarApp()
+  } else {
+    clearSession()
+    document.getElementById('loginScreen').style.display = 'flex'
+    document.getElementById('appScreen').style.display = 'none'
+  }
+})
+setInterval(() => {
+  if (document.getElementById('appScreen').style.display === 'block' && !isValid()) {
+    showMsg('loginMsg', 'Tu sesión expiró. Inicia sesión de nuevo.', 'info')
+    doLogout()
+  }
+}, 60_000)
+
+document.getElementById('btnCambiarPass')?.addEventListener('click', () => {
+
+  const p1 = document.getElementById('adminNewPass').value.trim()
+  const p2 = document.getElementById('adminConfirmPass').value.trim()
+
+  if (p1.length < 8) {
+    return showMsg('msgPass', 'La contraseña debe tener mínimo 8 caracteres', 'error')
+  }
+
+  if (p1 !== p2) {
+    return showMsg('msgPass', 'Las contraseñas no coinciden', 'error')
+  }
+
+  localStorage.setItem(USERS_LOCK_KEY, p1)
+
+  document.getElementById('adminNewPass').value = ''
+  document.getElementById('adminConfirmPass').value = ''
+
+  showMsg('msgPass', '✓ Contraseña actualizada correctamente', 'success')
+})
+</script>
+</body>
+</html>
