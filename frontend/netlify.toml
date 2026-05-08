@@ -1,0 +1,4 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://rifapro-api.onrender.com; script-src 'self' 'unsafe-inline'"
