@@ -27,11 +27,20 @@ export async function buscarBoletos(valor) {
     .limit(1)
     .single()
 
-  if (configError || !configActual) return null
+  if (configError || !configActual) {
+    return {
+      estado: 'error',
+      mensaje: 'No hay una rifa activa disponible'
+    }
+  }
 
-  // ── BUSCAR POR NÚMERO DE BOLETO ─────────────────────
+  // ─────────────────────────────────────────────
+  // BUSCAR POR BOLETO
+  // ─────────────────────────────────────────────
+
   if (entrada.length === 4) {
-    const { data: boleto, error: boletoError } = await supabase
+
+    const { data: boleto } = await supabase
       .from('boletos')
       .select('numero, compra_id')
       .eq('numero', entrada)
@@ -39,17 +48,22 @@ export async function buscarBoletos(valor) {
       .limit(1)
       .single()
 
-    if (!boletoError && boleto) {
-      const { data: compra, error: compraError } = await supabase
+    if (boleto) {
+
+      const { data: compra } = await supabase
         .from('compras')
         .select('id, nombre, telefono, estado, created_at')
         .eq('id', boleto.compra_id)
         .eq('config_id', configActual.id)
-        .eq('estado', 'aprobado')
         .limit(1)
         .single()
 
-      if (compraError || !compra) return null
+      if (!compra) {
+        return {
+          estado: 'no_encontrado',
+          mensaje: 'Número no encontrado'
+        }
+      }
 
       const { data: boletos } = await supabase
         .from('boletos')
@@ -58,7 +72,7 @@ export async function buscarBoletos(valor) {
         .eq('config_id', configActual.id)
 
       return {
-        estado: 'aprobado',
+        estado: compra.estado,
         nombre: compra.nombre,
         telefono: ocultarTelefono(compra.telefono),
         fecha: formatearFecha(compra.created_at),
@@ -69,33 +83,49 @@ export async function buscarBoletos(valor) {
     }
   }
 
-  // ── BUSCAR POR TELÉFONO ─────────────────────────────
-  const { data: compra, error: compraError } = await supabase
+  // ─────────────────────────────────────────────
+  // BUSCAR POR TELÉFONO
+  // ─────────────────────────────────────────────
+
+  const { data: compra } = await supabase
     .from('compras')
-    .select('id, nombre, telefono, created_at')
+    .select('id, nombre, telefono, estado, created_at')
     .eq('config_id', configActual.id)
     .eq('telefono', entrada)
-    .eq('estado', 'aprobado')
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
 
-  if (compraError || !compra) return null
+  if (!compra) {
+    return {
+      estado: 'no_encontrado',
+      mensaje: 'No se encontraron boletos para este número'
+    }
+  }
 
-  const { data: boletos, error: errorBoletos } = await supabase
+  // SI ESTÁ PENDIENTE O RECHAZADO
+  if (compra.estado !== 'aprobado') {
+    return {
+      estado: compra.estado,
+      nombre: compra.nombre,
+      telefono: ocultarTelefono(compra.telefono),
+      fecha: formatearFecha(compra.created_at),
+      boletos: [],
+      rifa: configActual.titulo
+    }
+  }
+
+  const { data: boletos } = await supabase
     .from('boletos')
     .select('numero')
     .eq('compra_id', compra.id)
     .eq('config_id', configActual.id)
-
-  if (errorBoletos) return null
 
   return {
     estado: 'aprobado',
     nombre: compra.nombre,
     telefono: ocultarTelefono(compra.telefono),
     fecha: formatearFecha(compra.created_at),
-    boletoConsultado: null,
     boletos: (boletos || []).map(b => b.numero),
     rifa: configActual.titulo
   }

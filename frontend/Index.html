@@ -2082,63 +2082,110 @@ function fin(btn) {
 }
 
 // ─── VERIFICAR ───────────────────────────────────────────────────────────────
-const verificarInput = document.getElementById('v_telefono')
+btnVerificar.addEventListener('click', async () => {
 
-verificarInput.addEventListener('input', () => {
-  verificarInput.value = verificarInput.value.replace(/\D/g, '')
-})
+  const valor = document
+    .getElementById('v_telefono')
+    .value
+    .trim()
 
-document.getElementById('btnVerificar').addEventListener('click', async function () {
-  const valor = soloNums(verificarInput.value)
-  const el = document.getElementById('resultado')
+  const resultado = document.getElementById('resultado')
 
-  if (valor.length < 4) {
-    hideMsg('verificarMsg')
-    el.innerHTML = 'Escribe al menos 4 dígitos.'
-    el.className = 'error'
+  resultado.style.display = 'none'
+  resultado.className = ''
+
+  if (!valor) {
+    resultado.className = 'error'
+    resultado.style.display = 'block'
+    resultado.innerHTML = 'Escribe un teléfono o número de boleto'
     return
   }
 
-  hideMsg('verificarMsg')
-  el.innerHTML = 'Consultando...'
-  el.className = ''
-
   try {
+
+    resultado.className = 'ok'
+    resultado.style.display = 'block'
+    resultado.innerHTML = 'Verificando información...'
+
     const res = await fetch(`${API}/verificar`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telefono: valor }),
-      signal: AbortSignal.timeout(8000)
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ valor }),
+      signal: AbortSignal.timeout(10000)
     })
 
-    if (!res.ok) throw new Error()
     const data = await res.json()
 
-    if (!data) {
-      el.innerHTML = 'No se encontraron boletos con ese número.'
-      el.className = 'error'
-      return
+    if (data.estado === 'aprobado') {
+
+      resultado.className = 'ok'
+
+      resultado.innerHTML = `
+        <strong>Compra aprobada ✅</strong><br><br>
+
+        Participante: ${data.nombre}<br>
+        Teléfono: ${data.telefono}<br>
+        Fecha: ${data.fecha}<br><br>
+
+        <strong>Boletos:</strong><br>
+        ${data.boletos.join(', ')}
+      `
+
     }
 
-    const boletos = (data.boletos || []).join(', ')
+    else if (data.estado === 'pendiente') {
 
-    el.innerHTML = `
-      <div class="ticket-card">
-        <div class="ticket-status">✓ Pago verificado</div>
-        <div class="ticket-name">${esc(data.nombre || 'Cliente')}</div>
-        <div class="ticket-line"><strong>Teléfono:</strong> ${esc(data.telefono || 'No disponible')}</div>
-        <div class="ticket-line"><strong>Fecha:</strong> ${esc(data.fecha || 'No disponible')}</div>
-        <div class="ticket-line"><strong>Rifa:</strong> ${esc(data.rifa || 'Rifa activa')}</div>
-        ${data.boletoConsultado ? `<div class="ticket-line"><strong>Boleto consultado:</strong> ${esc(data.boletoConsultado)}</div>` : ''}
-        <div class="ticket-line"><strong>Boletos asignados:</strong> ${esc(boletos)}</div>
-      </div>
+      resultado.className = 'ok'
+
+      resultado.innerHTML = `
+        <strong>Compra pendiente ⏳</strong><br><br>
+
+        Tu comprobante aún está siendo revisado.<br>
+        Podrás verificar tus boletos una vez la compra sea aprobada.
+      `
+
+    }
+
+    else if (data.estado === 'rechazado') {
+
+      resultado.className = 'error'
+
+      resultado.innerHTML = `
+        <strong>Compra rechazada ❌</strong><br><br>
+
+        El comprobante enviado no pudo ser validado.<br>
+        Si crees que esto fue un error, comunícate con soporte.
+      `
+
+    }
+
+    else {
+
+      resultado.className = 'error'
+
+      resultado.innerHTML = `
+        <strong>Número no encontrado</strong><br><br>
+
+        No existe ninguna compra asociada a este teléfono o boleto.
+      `
+
+    }
+
+  } catch (err) {
+
+    resultado.className = 'error'
+    resultado.style.display = 'block'
+
+    resultado.innerHTML = `
+      <strong>Error de conexión</strong><br><br>
+      No se pudo verificar la información.
     `
-    el.className = 'ok'
 
-  } catch {
-    el.innerHTML = 'Error de conexión. Intenta de nuevo.'
-    el.className = 'error'
+    console.error(err)
   }
+
 })
 // ─── MODALES ─────────────────────────────────────────────────────────────────
 function abrirModal(id) {
