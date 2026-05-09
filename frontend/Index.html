@@ -871,17 +871,115 @@ select option{background:#fff;color:var(--texto);}
    VERIFICAR
 ═══════════════════════════════════════════ */
 #resultado{
-  margin-top:12px;font-size:13px;
-  padding:12px 16px;border-radius:var(--r);
-  display:none;line-height:1.5;
+margin-top:12px;
+font-size:14px;
+padding:14px 16px;
+border-radius:18px;
+display:none;
+line-height:1.6;
 }
+
 #resultado.ok{
-  background:rgba(18,149,74,.09);color:var(--success);
-  display:block;border:1.5px solid rgba(18,149,74,.2);
+background:rgba(18,149,74,.08);
+border:1.5px solid rgba(18,149,74,.18);
+display:block;
 }
+
 #resultado.error{
-  background:rgba(208,17,26,.07);color:var(--rojo);
-  display:block;border:1.5px solid rgba(208,17,26,.18);
+background:rgba(208,17,26,.06);
+border:1.5px solid rgba(208,17,26,.16);
+display:block;
+color:var(--rojo);
+}
+
+.resultado-persona{
+margin-bottom:18px;
+}
+
+.resultado-nombre{
+font-size:22px;
+font-weight:800;
+color:var(--azul);
+margin-bottom:2px;
+}
+
+.resultado-telefono{
+font-size:14px;
+font-weight:600;
+color:var(--muted);
+}
+
+.resultado-seccion{
+margin-top:16px;
+}
+
+.resultado-titulo{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:7px 14px;
+border-radius:999px;
+font-size:13px;
+font-weight:800;
+margin-bottom:12px;
+border:1.5px solid transparent;
+}
+
+.resultado-titulo.aprobado{
+background:rgba(18,149,74,.10);
+color:var(--success);
+border-color:rgba(18,149,74,.18);
+}
+
+.resultado-titulo.pendiente{
+background:rgba(212,160,23,.10);
+color:#D4A017;
+border-color:rgba(212,160,23,.20);
+}
+
+.resultado-titulo.rechazado{
+background:rgba(208,17,26,.08);
+color:var(--rojo);
+border-color:rgba(208,17,26,.16);
+}
+
+.resultado-card{
+border-radius:18px;
+padding:14px 16px;
+margin-bottom:12px;
+border:1.5px solid transparent;
+}
+
+.resultado-card.aprobado{
+background:rgba(18,149,74,.08);
+border-color:rgba(18,149,74,.18);
+}
+
+.resultado-card.pendiente{
+background:rgba(212,160,23,.08);
+border-color:rgba(212,160,23,.20);
+}
+
+.resultado-card.rechazado{
+background:rgba(208,17,26,.06);
+border-color:rgba(208,17,26,.16);
+}
+
+.resultado-fecha{
+font-size:12px;
+font-weight:700;
+color:var(--muted);
+margin-bottom:8px;
+}
+
+.resultado-boletos{
+font-size:15px;
+line-height:1.7;
+color:var(--texto);
+}
+
+.resultado-boletos strong{
+color:var(--azul);
 }
 
 /* ═══════════════════════════════════════════
@@ -2082,213 +2180,170 @@ function fin(btn) {
 }
 
 // ─── VERIFICAR ───────────────────────────────────────────────────────────────
-btnVerificar.addEventListener('click', async () => {
+btnVerificar.addEventListener('click',async()=>{
 
-  const valor = document
-    .getElementById('v_telefono')
-    .value
-    .trim()
+const valor=document.getElementById('v_telefono').value.trim()
+const resultado=document.getElementById('resultado')
 
-  const resultado = document.getElementById('resultado')
+resultado.style.display='none'
+resultado.className=''
 
-  resultado.style.display = 'none'
-  resultado.className = ''
-
-  if (!valor) {
-    resultado.className = 'error'
-    resultado.style.display = 'block'
-    resultado.innerHTML = 'Escribe un teléfono o número de boleto'
-    return
-  }
-
-  try {
-
-    resultado.className = 'ok'
-    resultado.style.display = 'block'
-    resultado.innerHTML = 'Verificando información...'
-
-    const res = await fetch(`${API}/verificar`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ telefono: valor }),
-      signal: AbortSignal.timeout(10000)
-    })
-
-    const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al verificar')
-      }
-
-    resultado.style.display = 'block'
-
-if (data.estado === 'error') {
-  resultado.className = 'error'
-  resultado.innerHTML = `
-    <strong>Error</strong><br><br>
-    ${data.mensaje || 'No se pudo verificar la información'}
-  `
-  return
+if(!valor){
+resultado.className='error'
+resultado.style.display='block'
+resultado.innerHTML='Escribe un teléfono o número de boleto'
+return
 }
 
-if (data.estado === 'individual') {
+try{
 
-  const compra = data.compra
+resultado.className='ok'
+resultado.style.display='block'
+resultado.innerHTML='Verificando información...'
 
-  let color = 'aprobado'
+const res=await fetch(`${API}/verificar`,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({telefono:valor}),
+signal:AbortSignal.timeout(10000)
+})
 
-  if (compra.estado === 'pendiente') {
-    color = 'pendiente'
-  }
+const data=await res.json()
 
-  if (compra.estado === 'rechazado') {
-    color = 'rechazado'
-  }
-
-  resultado.className = 'ok'
-
-  resultado.innerHTML = `
-    <div class="resultado-seccion">
-
-      <div class="resultado-titulo ${color}">
-        ${{
-            aprobado:'Compra aprobada ✅',
-            pendiente:'Compra pendiente ⏳',
-            rechazado:'Compra rechazada ❌'
-          }[compra.estado]}
-      </div>
-
-      <div class="resultado-card ${color}">
-
-        <div class="resultado-fecha">
-          ${compra.fecha}
-        </div>
-
-        <div class="resultado-boletos">
-
-          ${
-            compra.estado === 'aprobado'
-            ? `
-              <strong>Boletos:</strong>
-              ${compra.boletos.join(', ')}
-            `
-            : compra.estado === 'pendiente'
-            ? `
-              Tu comprobante está siendo revisado.
-            `
-            : `
-              El comprobante enviado fue rechazado.
-            `
-          }
-
-        </div>
-
-      </div>
-
-    </div>
-  `
-
-  return
+if(!res.ok){
+throw new Error(data.error||'Error al verificar')
 }
 
-if (data.estado === 'historial') {
+resultado.style.display='block'
 
-  resultado.className = ''
-
-  let html = `
-    <div style="margin-bottom:18px;">
-
-      <strong>${data.nombre}</strong><br>
-      ${data.telefono}
-
-    </div>
-  `
-
-  function renderGrupo(titulo, clase, items) {
-
-    if (!items || items.length === 0) {
-      return ''
-    }
-
-    return `
-      <div class="resultado-seccion">
-
-        <div class="resultado-titulo ${clase}">
-          ${titulo}
-        </div>
-
-        ${items.map((item, index) => `
-
-          <div class="resultado-card ${clase}">
-
-            <div class="resultado-fecha">
-              Jugada #${index + 1} • ${item.fecha}
-            </div>
-
-            <div class="resultado-boletos">
-
-              ${
-                clase === 'aprobado'
-                ? `
-                  <strong>Boletos:</strong>
-                  ${item.boletos.join(', ')}
-                `
-                : clase === 'pendiente'
-                ? `
-                  Tu comprobante está siendo revisado.
-                `
-                : `
-                  El comprobante enviado fue rechazado.
-                `
-              }
-
-            </div>
-
-          </div>
-
-        `).join('')}
-
-      </div>
-    `
-  }
-
-  html += renderGrupo(
-    'Compras aprobadas ✅',
-    'aprobado',
-    data.aprobadas
-  )
-
-  html += renderGrupo(
-    'Compras pendientes ⏳',
-    'pendiente',
-    data.pendientes
-  )
-
-  html += renderGrupo(
-    'Compras rechazadas ❌',
-    'rechazado',
-    data.rechazadas
-  )
-
-  resultado.innerHTML = html
-
-  return
+if(data.estado==='no_encontrado'){
+resultado.className='error'
+resultado.innerHTML=`
+<strong>Número no encontrado ❌</strong><br><br>
+No existe ninguna compra asociada a este teléfono o boleto.
+`
+return
 }
 
-  } catch (err) {
+if(data.estado==='error'){
+resultado.className='error'
+resultado.innerHTML=`
+<strong>Error</strong><br><br>
+${data.mensaje||'No se pudo verificar la información'}
+`
+return
+}
 
-    resultado.className = 'error'
-    resultado.style.display = 'block'
+if(data.estado==='individual'){
 
-    resultado.innerHTML = `
-      <strong>Error de conexión</strong><br><br>
-      No se pudo verificar la información.
-    `
+const compra=data.compra
 
-    console.error(err)
-  }
+let color='aprobado'
+if(compra.estado==='pendiente') color='pendiente'
+if(compra.estado==='rechazado') color='rechazado'
+
+resultado.className='ok'
+
+resultado.innerHTML=`
+<div class="resultado-seccion">
+
+<div class="resultado-titulo ${color}">
+${{
+aprobado:'Compra aprobada ✅',
+pendiente:'Compra pendiente ⏳',
+rechazado:'Compra rechazada ❌'
+}[compra.estado]}
+</div>
+
+<div class="resultado-card ${color}">
+
+<div class="resultado-fecha">
+${compra.fecha}
+</div>
+
+<div class="resultado-boletos">
+${
+compra.estado==='aprobado'
+? `<strong>Boletos:</strong> ${compra.boletos.join(', ')}`
+: compra.estado==='pendiente'
+? 'Tu comprobante está siendo revisado.'
+: 'El comprobante enviado fue rechazado.'
+}
+</div>
+
+</div>
+</div>
+`
+return
+}
+
+if(data.estado==='historial'){
+
+resultado.className='ok'
+
+let html=`
+<div class="resultado-persona">
+<div class="resultado-nombre">${data.nombre}</div>
+<div class="resultado-telefono">${data.telefono}</div>
+</div>
+`
+
+function renderGrupo(titulo,clase,items){
+
+if(!items||items.length===0) return ''
+
+return `
+<div class="resultado-seccion">
+
+<div class="resultado-titulo ${clase}">
+${titulo}
+</div>
+
+${items.map((item,index)=>`
+
+<div class="resultado-card ${clase}">
+
+<div class="resultado-fecha">
+Jugada #${index+1} • ${item.fecha}
+</div>
+
+<div class="resultado-boletos">
+${
+clase==='aprobado'
+? `<strong>Boletos:</strong> ${item.boletos.join(', ')}`
+: clase==='pendiente'
+? 'Tu comprobante está siendo revisado.'
+: 'El comprobante enviado fue rechazado.'
+}
+</div>
+
+</div>
+
+`).join('')}
+
+</div>
+`
+}
+
+html+=renderGrupo('Compras aprobadas ✅','aprobado',data.aprobadas)
+html+=renderGrupo('Compras pendientes ⏳','pendiente',data.pendientes)
+html+=renderGrupo('Compras rechazadas ❌','rechazado',data.rechazadas)
+
+resultado.innerHTML=html
+}
+
+}catch(err){
+
+resultado.className='error'
+resultado.style.display='block'
+
+resultado.innerHTML=`
+<strong>Error</strong><br><br>
+${err.message||'No se pudo verificar la información'}
+`
+
+console.error(err)
+}
 
 })
 // ─── MODALES ─────────────────────────────────────────────────────────────────

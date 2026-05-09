@@ -1,164 +1,144 @@
 import { supabase } from './supabaseClient.mjs'
 
-function ocultarTelefono(tel = '') {
-  const limpio = tel.replace(/\D/g, '')
-  if (limpio.length < 6) return limpio
-  return `${limpio.slice(0, 3)}****${limpio.slice(-2)}`
+function ocultarTelefono(tel=''){
+const limpio=tel.replace(/\D/g,'')
+if(limpio.length<6) return limpio
+return `${limpio.slice(0,3)}****${limpio.slice(-2)}`
 }
 
-function formatearFecha(fecha) {
-  return new Date(fecha).toLocaleString('es-DO', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  })
+function formatearFecha(fecha){
+return new Date(fecha).toLocaleString('es-DO',{
+day:'2-digit',
+month:'long',
+year:'numeric',
+hour:'numeric',
+minute:'2-digit'
+})
 }
 
-async function obtenerBoletos(compraId, configId) {
+async function obtenerBoletos(compraId,configId){
+const { data }=await supabase
+.from('boletos')
+.select('numero')
+.eq('compra_id',compraId)
+.eq('config_id',configId)
 
-  const { data } = await supabase
-    .from('boletos')
-    .select('numero')
-    .eq('compra_id', compraId)
-    .eq('config_id', configId)
-
-  return (data || []).map(b => b.numero)
+return (data||[]).map(b=>b.numero)
 }
 
-function crearGrupo() {
-  return {
-    aprobadas: [],
-    pendientes: [],
-    rechazadas: []
-  }
+function crearGrupo(){
+return{
+aprobadas:[],
+pendientes:[],
+rechazadas:[]
+}
 }
 
-export async function buscarBoletos(valor) {
+export async function buscarBoletos(valor){
 
-  const entrada = String(valor || '').replace(/\D/g, '')
+const entrada=String(valor||'').replace(/\D/g,'')
 
-  const { data: configActual, error: configError } = await supabase
-    .from('configuracion')
-    .select('id, titulo')
-    .eq('estado', 'activa')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+const { data:configActual,error:configError }=await supabase
+.from('configuracion')
+.select('id,titulo')
+.eq('estado','activa')
+.order('created_at',{ascending:false})
+.limit(1)
+.single()
 
-  if (configError || !configActual) {
-    return {
-      estado: 'error',
-      mensaje: 'No hay una rifa activa disponible'
-    }
-  }
+if(configError||!configActual){
+return{
+estado:'error',
+mensaje:'No hay una rifa activa disponible'
+}
+}
 
-  // ───────────────────────────────
-  // BUSCAR POR BOLETO
-  // ───────────────────────────────
+if(entrada.length===4){
 
-  if (entrada.length === 4) {
+const { data:boleto }=await supabase
+.from('boletos')
+.select('numero,compra_id')
+.eq('numero',entrada)
+.eq('config_id',configActual.id)
+.limit(1)
+.single()
 
-    const { data: boleto } = await supabase
-      .from('boletos')
-      .select('numero, compra_id')
-      .eq('numero', entrada)
-      .eq('config_id', configActual.id)
-      .limit(1)
-      .single()
+if(!boleto){
+return{estado:'no_encontrado'}
+}
 
-    if (!boleto) {
-      return {
-        estado: 'no_encontrado'
-      }
-    }
+const { data:compra }=await supabase
+.from('compras')
+.select('id,nombre,telefono,estado,created_at')
+.eq('id',boleto.compra_id)
+.eq('config_id',configActual.id)
+.limit(1)
+.single()
 
-    const { data: compra } = await supabase
-      .from('compras')
-      .select('id, nombre, telefono, estado, created_at')
-      .eq('id', boleto.compra_id)
-      .eq('config_id', configActual.id)
-      .limit(1)
-      .single()
+if(!compra){
+return{estado:'no_encontrado'}
+}
 
-    if (!compra) {
-      return {
-        estado: 'no_encontrado'
-      }
-    }
+const boletos=await obtenerBoletos(compra.id,configActual.id)
 
-    const boletos = await obtenerBoletos(
-      compra.id,
-      configActual.id
-    )
+return{
+estado:'individual',
+nombre:compra.nombre,
+telefono:ocultarTelefono(compra.telefono),
+rifa:configActual.titulo,
+compra:{
+estado:compra.estado,
+fecha:formatearFecha(compra.created_at),
+boletos
+}
+}
+}
 
-    return {
-      estado: 'individual',
-      nombre: compra.nombre,
-      telefono: ocultarTelefono(compra.telefono),
-      rifa: configActual.titulo,
-      compra: {
-        estado: compra.estado,
-        fecha: formatearFecha(compra.created_at),
-        boletos
-      }
-    }
-  }
+const { data:compras }=await supabase
+.from('compras')
+.select('id,nombre,telefono,estado,created_at')
+.eq('config_id',configActual.id)
+.ilike('telefono',`%${entrada}%`)
+.order('created_at',{ascending:false})
 
-  // ───────────────────────────────
-  // BUSCAR POR TELÉFONO
-  // ───────────────────────────────
+if(!compras||compras.length===0){
+return{
+estado:'no_encontrado'
+}
+}
 
-  const { data: compras } = await supabase
-    .from('compras')
-    .select('id, nombre, telefono, estado, created_at')
-    .eq('config_id', configActual.id)
-    .eq('telefono', entrada)
-    .order('created_at', { ascending: false })
+const resultado=crearGrupo()
 
-  if (!compras || compras.length === 0) {
-    return {
-      estado: 'no_encontrado'
-    }
-  }
+for(const compra of compras){
 
-  const resultado = crearGrupo()
+const item={
+fecha:formatearFecha(compra.created_at),
+boletos:[],
+estado:compra.estado
+}
 
-  for (const compra of compras) {
+if(compra.estado==='aprobado'){
+item.boletos=await obtenerBoletos(compra.id,configActual.id)
+}
 
-    const item = {
-      fecha: formatearFecha(compra.created_at),
-      boletos: [],
-      estado: compra.estado
-    }
+if(compra.estado==='aprobado'){
+resultado.aprobadas.push(item)
+}
 
-    if (compra.estado === 'aprobado') {
+else if(compra.estado==='pendiente'){
+resultado.pendientes.push(item)
+}
 
-      item.boletos = await obtenerBoletos(
-        compra.id,
-        configActual.id
-      )
-    }
+else if(compra.estado==='rechazado'){
+resultado.rechazadas.push(item)
+}
+}
 
-    if (compra.estado === 'aprobado') {
-      resultado.aprobadas.push(item)
-    }
-
-    else if (compra.estado === 'pendiente') {
-      resultado.pendientes.push(item)
-    }
-
-    else if (compra.estado === 'rechazado') {
-      resultado.rechazadas.push(item)
-    }
-  }
-
-  return {
-    estado: 'historial',
-    nombre: compras[0].nombre,
-    telefono: ocultarTelefono(compras[0].telefono),
-    rifa: configActual.titulo,
-    ...resultado
-  }
+return{
+estado:'historial',
+nombre:compras[0].nombre,
+telefono:ocultarTelefono(compras[0].telefono),
+rifa:configActual.titulo,
+...resultado
+}
 }
