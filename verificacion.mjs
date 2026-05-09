@@ -16,7 +16,26 @@ function formatearFecha(fecha) {
   })
 }
 
+async function obtenerBoletos(compraId, configId) {
+  const { data } = await supabase
+    .from('boletos')
+    .select('numero')
+    .eq('compra_id', compraId)
+    .eq('config_id', configId)
+
+  return (data || []).map(b => b.numero)
+}
+
+function crearGrupo() {
+  return {
+    aprobadas: [],
+    pendientes: [],
+    rechazadas: []
+  }
+}
+
 export async function buscarBoletos(valor) {
+
   const entrada = String(valor || '').replace(/\D/g, '')
 
   const { data: configActual, error: configError } = await supabase
@@ -35,7 +54,7 @@ export async function buscarBoletos(valor) {
   }
 
   // ─────────────────────────────────────────────
-  // BUSCAR POR BOLETO
+  // BUSCAR POR NÚMERO DE BOLETO
   // ─────────────────────────────────────────────
 
   if (entrada.length === 4) {
@@ -48,37 +67,37 @@ export async function buscarBoletos(valor) {
       .limit(1)
       .single()
 
-    if (boleto) {
-
-      const { data: compra } = await supabase
-        .from('compras')
-        .select('id, nombre, telefono, estado, created_at')
-        .eq('id', boleto.compra_id)
-        .eq('config_id', configActual.id)
-        .limit(1)
-        .single()
-
-      if (!compra) {
-        return {
-          estado: 'no_encontrado',
-          mensaje: 'Número no encontrado'
-        }
-      }
-
-      const { data: boletos } = await supabase
-        .from('boletos')
-        .select('numero')
-        .eq('compra_id', compra.id)
-        .eq('config_id', configActual.id)
-
+    if (!boleto) {
       return {
+        estado: 'no_encontrado'
+      }
+    }
+
+    const { data: compra } = await supabase
+      .from('compras')
+      .select('id, nombre, telefono, estado, created_at')
+      .eq('id', boleto.compra_id)
+      .eq('config_id', configActual.id)
+      .limit(1)
+      .single()
+
+    if (!compra) {
+      return {
+        estado: 'no_encontrado'
+      }
+    }
+
+    const boletos = await obtenerBoletos(compra.id, configActual.id)
+
+    return {
+      estado: 'individual',
+      nombre: compra.nombre,
+      telefono: ocultarTelefono(compra.telefono),
+      rifa: configActual.titulo,
+      compra: {
         estado: compra.estado,
-        nombre: compra.nombre,
-        telefono: ocultarTelefono(compra.telefono),
         fecha: formatearFecha(compra.created_at),
-        boletoConsultado: entrada,
-        boletos: (boletos || []).map(b => b.numero),
-        rifa: configActual.titulo
+        boletos
       }
     }
   }
@@ -87,46 +106,54 @@ export async function buscarBoletos(valor) {
   // BUSCAR POR TELÉFONO
   // ─────────────────────────────────────────────
 
-  const { data: compra } = await supabase
+  const { data: compras } = await supabase
     .from('compras')
     .select('id, nombre, telefono, estado, created_at')
     .eq('config_id', configActual.id)
     .eq('telefono', entrada)
     .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
 
-  if (!compra) {
+  if (!compras || compras.length === 0) {
     return {
-      estado: 'no_encontrado',
-      mensaje: 'No se encontraron boletos para este número'
+      estado: 'no_encontrado'
     }
   }
 
-  // SI ESTÁ PENDIENTE O RECHAZADO
-  if (compra.estado !== 'aprobado') {
-    return {
-      estado: compra.estado,
-      nombre: compra.nombre,
-      telefono: ocultarTelefono(compra.telefono),
+  const resultado = crearGrupo()
+
+  for (const compra of compras) {
+
+    const item = {
       fecha: formatearFecha(compra.created_at),
       boletos: [],
-      rifa: configActual.titulo
+      estado: compra.estado
+    }
+
+    if (compra.estado === 'aprobado') {
+      item.boletos = await obtenerBoletos(
+        compra.id,
+        configActual.id
+      )
+    }
+
+    if (compra.estado === 'aprobado') {
+      resultado.aprobadas.push(item)
+    }
+
+    else if (compra.estado === 'pendiente') {
+      resultado.pendientes.push(item)
+    }
+
+    else if (compra.estado === 'rechazado') {
+      resultado.rechazadas.push(item)
     }
   }
 
-  const { data: boletos } = await supabase
-    .from('boletos')
-    .select('numero')
-    .eq('compra_id', compra.id)
-    .eq('config_id', configActual.id)
-
   return {
-    estado: 'aprobado',
-    nombre: compra.nombre,
-    telefono: ocultarTelefono(compra.telefono),
-    fecha: formatearFecha(compra.created_at),
-    boletos: (boletos || []).map(b => b.numero),
-    rifa: configActual.titulo
+    estado: 'historial',
+    nombre: compras[0].nombre,
+    telefono: ocultarTelefono(compras[0].telefono),
+    rifa: configActual.titulo,
+    ...resultado
   }
 }
