@@ -2112,11 +2112,15 @@ btnVerificar.addEventListener('click', async () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ valor }),
+      body: JSON.stringify({ telefono: valor }),
       signal: AbortSignal.timeout(10000)
     })
 
     const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al verificar')
+      }
 
     resultado.style.display = 'block'
 
