@@ -1192,7 +1192,7 @@ footer{border-top:1.5px solid var(--borde);background:var(--blanco);}
 <!-- ══════════ HERO ══════════ -->
 <section class="hero" id="inicio" aria-labelledby="tituloRifa">
   <div class="hero-copy">
-    <div class="hero-eyebrow">🎟️ Rifa activa · Boletos disponibles</div>
+    <div class="hero-eyebrow">🎟️ Rifa activa</div>
 
     <h1 id="tituloRifa">
       <span class="neon-blanco">Cargando</span><br>
@@ -2118,60 +2118,160 @@ btnVerificar.addEventListener('click', async () => {
 
     const data = await res.json()
 
-    if (data.estado === 'aprobado') {
+    resultado.style.display = 'block'
 
-      resultado.className = 'ok'
+if (data.estado === 'error') {
+  resultado.className = 'error'
+  resultado.innerHTML = `
+    <strong>Error</strong><br><br>
+    ${data.mensaje || 'No se pudo verificar la información'}
+  `
+  return
+}
 
-      resultado.innerHTML = `
-        <strong>Compra aprobada ✅</strong><br><br>
+if (data.estado === 'individual') {
 
-        Participante: ${data.nombre}<br>
-        Teléfono: ${data.telefono}<br>
-        Fecha: ${data.fecha}<br><br>
+  const compra = data.compra
 
-        <strong>Boletos:</strong><br>
-        ${data.boletos.join(', ')}
-      `
+  let color = 'aprobado'
 
+  if (compra.estado === 'pendiente') {
+    color = 'pendiente'
+  }
+
+  if (compra.estado === 'rechazado') {
+    color = 'rechazado'
+  }
+
+  resultado.className = 'ok'
+
+  resultado.innerHTML = `
+    <div class="resultado-seccion">
+
+      <div class="resultado-titulo ${color}">
+        ${{
+            aprobado:'Compra aprobada ✅',
+            pendiente:'Compra pendiente ⏳',
+            rechazado:'Compra rechazada ❌'
+          }[compra.estado]}
+      </div>
+
+      <div class="resultado-card ${color}">
+
+        <div class="resultado-fecha">
+          ${compra.fecha}
+        </div>
+
+        <div class="resultado-boletos">
+
+          ${
+            compra.estado === 'aprobado'
+            ? `
+              <strong>Boletos:</strong>
+              ${compra.boletos.join(', ')}
+            `
+            : compra.estado === 'pendiente'
+            ? `
+              Tu comprobante está siendo revisado.
+            `
+            : `
+              El comprobante enviado fue rechazado.
+            `
+          }
+
+        </div>
+
+      </div>
+
+    </div>
+  `
+
+  return
+}
+
+if (data.estado === 'historial') {
+
+  resultado.className = ''
+
+  let html = `
+    <div style="margin-bottom:18px;">
+
+      <strong>${data.nombre}</strong><br>
+      ${data.telefono}
+
+    </div>
+  `
+
+  function renderGrupo(titulo, clase, items) {
+
+    if (!items || items.length === 0) {
+      return ''
     }
 
-    else if (data.estado === 'pendiente') {
+    return `
+      <div class="resultado-seccion">
 
-      resultado.className = 'ok'
+        <div class="resultado-titulo ${clase}">
+          ${titulo}
+        </div>
 
-      resultado.innerHTML = `
-        <strong>Compra pendiente ⏳</strong><br><br>
+        ${items.map((item, index) => `
 
-        Tu comprobante aún está siendo revisado.<br>
-        Podrás verificar tus boletos una vez la compra sea aprobada.
-      `
+          <div class="resultado-card ${clase}">
 
-    }
+            <div class="resultado-fecha">
+              Jugada #${index + 1} • ${item.fecha}
+            </div>
 
-    else if (data.estado === 'rechazado') {
+            <div class="resultado-boletos">
 
-      resultado.className = 'error'
+              ${
+                clase === 'aprobado'
+                ? `
+                  <strong>Boletos:</strong>
+                  ${item.boletos.join(', ')}
+                `
+                : clase === 'pendiente'
+                ? `
+                  Tu comprobante está siendo revisado.
+                `
+                : `
+                  El comprobante enviado fue rechazado.
+                `
+              }
 
-      resultado.innerHTML = `
-        <strong>Compra rechazada ❌</strong><br><br>
+            </div>
 
-        El comprobante enviado no pudo ser validado.<br>
-        Si crees que esto fue un error, comunícate con soporte.
-      `
+          </div>
 
-    }
+        `).join('')}
 
-    else {
+      </div>
+    `
+  }
 
-      resultado.className = 'error'
+  html += renderGrupo(
+    'Compras aprobadas ✅',
+    'aprobado',
+    data.aprobadas
+  )
 
-      resultado.innerHTML = `
-        <strong>Número no encontrado</strong><br><br>
+  html += renderGrupo(
+    'Compras pendientes ⏳',
+    'pendiente',
+    data.pendientes
+  )
 
-        No existe ninguna compra asociada a este teléfono o boleto.
-      `
+  html += renderGrupo(
+    'Compras rechazadas ❌',
+    'rechazado',
+    data.rechazadas
+  )
 
-    }
+  resultado.innerHTML = html
+
+  return
+}
 
   } catch (err) {
 
