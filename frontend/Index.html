@@ -1299,10 +1299,7 @@ footer{border-top:1.5px solid var(--borde);background:var(--blanco);}
         Progreso
       </div>
 
-      <div class="progreso-header">
-        <span class="prog-titulo" id="vendidosTexto"><strong>0</strong> vendidos</span>
-        <span class="prog-pct" id="porcentajeTexto">0%</span>
-      </div>
+     <div class="progreso-header"></div>
 
       <div class="barra-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="barraWrap" aria-valuenow="0">
         <div class="barra-fill" id="barra"></div>
@@ -1736,16 +1733,27 @@ async function cargarProgreso() {
   try {
     const res  = await fetch(`${API}/progreso`, { signal: AbortSignal.timeout(5000) })
     if (!res.ok) return
+
     const data = await res.json()
 
     const v = Number(data.vendidos) || 0
     const t = Number(data.total) || 0
     const p = t > 0 ? ((v / t) * 100) : 0
 
-    document.getElementById('barra').style.width = Math.min(100, p) + '%'
-    document.getElementById('barraWrap').setAttribute('aria-valuenow', p)
-    document.getElementById('vendidosTexto').innerHTML = `<strong>${v.toLocaleString()}</strong> de ${t.toLocaleString()} vendidos`
-    document.getElementById('porcentajeTexto').textContent = `${p.toFixed(2)}%`
+    document.getElementById('barra').style.width =
+      Math.min(100, p) + '%'
+
+    document.getElementById('barraWrap')
+      .setAttribute('aria-valuenow', p)
+
+    const vendidosEl =
+      document.getElementById('vendidosTexto')
+
+    if (vendidosEl) vendidosEl.remove()
+
+    //document.getElementById('porcentajeTexto')
+    //  .textContent = `${p.toFixed(2)}%`
+
   } catch {}
 }
 
