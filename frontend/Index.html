@@ -1767,7 +1767,7 @@ inputCantidad.addEventListener('blur', () => {
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 async function cargarConfig() {
   try {
-    const res  = await fetch(`${API}/config`, { signal: AbortSignal.timeout(8000) })
+    const res  = await fetch(`${API}/config`, { signal: AbortSignal.timeout(20000) })
     if (!res.ok) throw new Error()
     const data = await res.json()
 
@@ -1789,7 +1789,7 @@ async function cargarConfig() {
 
     let progreso = 0
     try {
-      const progRes = await fetch(`${API}/progreso`, { signal: AbortSignal.timeout(5000) })
+      const progRes = await fetch(`${API}/progreso`, { signal: AbortSignal.timeout(20000) })
       if (progRes.ok) {
         const progData = await progRes.json()
         const vendidos = Number(progData.vendidos) || 0
@@ -1857,7 +1857,7 @@ async function cargarProgreso() {
 }
 
 cargarProgreso()
-setInterval(cargarProgreso, 6000)
+setInterval(cargarProgreso, 30000)
 
 // ─── FORMULARIO ───────────────────────────────────────────────────────────────
 document.getElementById('formulario').addEventListener('submit', async function(e) {

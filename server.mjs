@@ -264,18 +264,20 @@ app.post('/comprar',
 }
       if (monto !== totalEsperado) return sendError(res, 400, `Monto incorrecto. Debe ser RD$ ${totalEsperado}`)
 
-      const { data: ocupados, error: ocupadosError } = await supabase
-        .from('compras')
-        .select('cantidad')
-        .eq('config_id', config.id)
-        .in('estado', ['pendiente', 'procesando', 'aprobado'])
+          const { data: ocupados, error: ocupadosError } = await supabase
+      .from('compras')
+      .select('cantidad')
+      .eq('config_id', config.id)
+      .in('estado', ['pendiente', 'procesando', 'aprobado'])
 
-      if (ocupadosError) {
-        throw ocupadosError
-      }
+    if (ocupadosError) {
+      throw ocupadosError
+    }
 
-      const vendidos = (ocupados || [])
-        .reduce((acc, c) => acc + Number(c.cantidad || 0), 0)
+    const vendidos = ocupados?.reduce(
+      (acc, c) => acc + (c.cantidad || 0),
+      0
+    ) || 0
 
       if (vendidos >= config.total_boletos) {
         return sendError(res, 400, 'No quedan boletos disponibles')
@@ -703,12 +705,17 @@ app.patch(
                   )
                 }
 
-                const { data: boletos } = await supabase
+                const { count, error: countError } = await supabase
                   .from('boletos')
-                  .select('id')
+                  .select('*', {
+                    count: 'exact',
+                    head: true
+                  })
                   .eq('config_id', id)
 
-                const vendidos = (boletos || []).length
+                if (countError) throw countError
+
+                const vendidos = count || 0
 
                 if (totalBoletos < vendidos) {
                   return sendError(
