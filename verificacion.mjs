@@ -81,16 +81,55 @@ return{estado:'no_encontrado'}
 
 const boletos=await obtenerBoletos(compra.id,configActual.id)
 
-return{
-estado:'individual',
-nombre:compra.nombre,
-telefono:ocultarTelefono(compra.telefono),
-rifa:configActual.titulo,
-compra:{
-estado:compra.estado,
-fecha:formatearFecha(compra.created_at),
-boletos
+const telefonoBusqueda=compra.telefono
+
+const { data:compras }=await supabase
+.from('compras')
+.select('id,nombre,telefono,estado,created_at')
+.ilike('telefono',`%${telefonoBusqueda.replace(/\D/g,'')}%`)
+.eq('config_id',configActual.id)
+.order('created_at',{ascending:false})
+
+if(!compras||compras.length===0){
+return{estado:'no_encontrado'}
 }
+
+const resultado=crearGrupo()
+
+for(const compraItem of compras){
+
+const item={
+fecha:formatearFecha(compraItem.created_at),
+boletos:[],
+estado:compraItem.estado
+}
+
+if(compraItem.estado==='aprobado'){
+item.boletos=await obtenerBoletos(
+compraItem.id,
+configActual.id
+)
+}
+
+if(compraItem.estado==='aprobado'){
+resultado.aprobadas.push(item)
+}
+
+else if(compraItem.estado==='pendiente'){
+resultado.pendientes.push(item)
+}
+
+else if(compraItem.estado==='rechazado'){
+resultado.rechazadas.push(item)
+}
+}
+
+return{
+estado:'historial',
+nombre:compras[0].nombre,
+telefono:ocultarTelefono(compras[0].telefono),
+rifa:configActual.titulo,
+...resultado
 }
 }
 

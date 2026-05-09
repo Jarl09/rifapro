@@ -2067,37 +2067,45 @@ async function cargarConfig() {
 }
 
 // ─── PROGRESO ─────────────────────────────────────────────────────────────────
-async function cargarProgreso() {
-  try {
-    const res  = await fetch(`${API}/progreso`, { signal: AbortSignal.timeout(5000) })
-    if (!res.ok) return
+async function cargarProgreso(){
 
-    const data = await res.json()
+try{
 
-    const v = Number(data.vendidos) || 0
-    const t = Number(data.total) || 0
-    const p = t > 0 ? ((v / t) * 100) : 0
+const res=await fetch(`${API}/progreso`,{
+signal:AbortSignal.timeout(5000)
+})
 
-    document.getElementById('barra').style.width =
-      Math.min(100, p) + '%'
+if(!res.ok) return
 
-    document.getElementById('barraWrap')
-      .setAttribute('aria-valuenow', p)
+const data=await res.json()
 
-    const vendidosEl =
-      document.getElementById('vendidosTexto')
+const vendidos=Number(data.vendidos)||0
+const total=Number(data.total)||0
+const porcentaje=total>0?((vendidos/total)*100):0
 
-    if (vendidosEl) vendidosEl.remove()
+document.getElementById('barra').style.width=
+`${Math.min(100,porcentaje)}%`
 
-    //document.getElementById('porcentajeTexto')
-    //  .textContent = `${p.toFixed(2)}%`
+document.getElementById('barraWrap')
+.setAttribute('aria-valuenow',porcentaje.toFixed(2))
 
-  } catch {}
+document.getElementById('porcentajeTexto')
+.textContent=`${porcentaje.toFixed(1)}%`
+
+const vendidosEl=document.getElementById('vendidosTexto')
+
+if(vendidosEl){
+vendidosEl.remove()
+}
+
+}catch(err){
+console.error('Error progreso:',err)
+}
+
 }
 
 cargarProgreso()
-setInterval(cargarProgreso, 30000)
-
+setInterval(cargarProgreso,30000)
 // ─── FORMULARIO ───────────────────────────────────────────────────────────────
 document.getElementById('formulario').addEventListener('submit', async function(e) {
   e.preventDefault()
