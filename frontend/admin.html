@@ -1139,6 +1139,59 @@ input, select, textarea, .btn, .badge, .tabs, .tab, .msg {
   transition-property: background, border-color, color, box-shadow;
   transition-duration: 0.2s;
 }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 640px)
+══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px){
+
+  .main{
+    padding:16px;
+  }
+
+  .page-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .page-actions{
+    width:100%;
+    flex-wrap:wrap;
+  }
+
+  .stats-row{
+    grid-template-columns:1fr;
+  }
+
+  .field-row{
+    grid-template-columns:1fr;
+  }
+
+  .rifa-summary{
+    grid-template-columns:1fr;
+  }
+
+  .audit-row{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+
+  .usuario-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .c-acciones{
+    width:100%;
+  }
+
+  .c-acciones .btn{
+    flex:1;
+    justify-content:center;
+  }
+
+}
 </style>
 </head>
 <body>

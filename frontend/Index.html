@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy"
   content="default-src 'self' 'unsafe-inline' data: blob: https://rifapro-api.onrender.com;
   script-src 'self' 'unsafe-inline' blob:;
@@ -1070,6 +1070,92 @@ footer{border-top:1.5px solid var(--borde);background:var(--blanco);}
 .hero-img-side{animation:fadeUp .5s .09s ease both;}
 .main-wrap>div{animation:fadeUp .5s .16s ease both;}
 .franja{animation:fadeUp .4s .05s ease both;}
+
+/* ═══════════════════════════════════════════
+   responsive
+═══════════════════════════════════════════ */
+@media (max-width: 768px){
+
+  .header{
+    padding:0 16px;
+    height:auto;
+    min-height:64px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .menu{
+    width:100%;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .hero{
+    grid-template-columns:1fr;
+    gap:28px;
+    padding:24px 16px 28px;
+  }
+
+  .hero h1{
+    font-size:48px;
+    line-height:.95;
+  }
+
+  .hero-desc{
+    font-size:16px;
+    padding:18px;
+    line-height:1.7;
+  }
+
+  .hero-img-card{
+    min-height:auto;
+    padding:14px;
+  }
+
+  .main-wrap{
+    grid-template-columns:1fr;
+    padding:24px 16px 60px;
+  }
+
+  .card{
+    padding:20px 16px;
+  }
+
+  .metodos-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .cantidad-row{
+    height:54px;
+  }
+
+  .total-box{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+  }
+
+  .footer-inner{
+    padding:28px 16px 20px;
+  }
+
+  .footer-top{
+    flex-direction:column;
+    gap:24px;
+  }
+
+  .footer-bottom{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .wpp-bubble{
+    right:16px;
+    bottom:16px;
+  }
+
+}
+
 </style>
 </head>
 <body>
