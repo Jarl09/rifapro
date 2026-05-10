@@ -83,12 +83,12 @@ export async function obtenerPendientes() {
 
   if (configError || !configActual) return []
 
-  const { data, error } = await supabase
-    .from('compras')
-    .select('*')
-    .eq('estado', 'pendiente')
-    .eq('config_id', configActual.id)
-    .order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('compras')
+      .select('*')
+      .eq('estado', 'pendiente')
+      .eq('config_id', configActual.id)
+      .order('created_at', { ascending: true })
 
   if (error) throw error
 

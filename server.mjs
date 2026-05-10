@@ -197,7 +197,7 @@ app.get('/progreso', async (req, res) => {
 
 app.post('/verificar', rateLimit({ windowMs: 60_000, max: 10 }), async (req, res) => {
   try {
-    const valor = sanitizePhone(req.body.telefono)
+    const valor = sanitizePhone(req.body.valor)
 
 if (valor.length < 4) {
   return sendError(res, 400, 'Dato requerido')
@@ -264,20 +264,17 @@ app.post('/comprar',
 }
       if (monto !== totalEsperado) return sendError(res, 400, `Monto incorrecto. Debe ser RD$ ${totalEsperado}`)
 
-          const { data: ocupados, error: ocupadosError } = await supabase
-      .from('compras')
-      .select('cantidad')
-      .eq('config_id', config.id)
-      .in('estado', ['pendiente', 'procesando', 'aprobado'])
+        const {
+        count:vendidos,
+        error:ocupadosError
+        }=await supabase
+        .from('boletos')
+        .select('*',{count:'exact',head:true})
+        .eq('config_id',config.id)
 
-    if (ocupadosError) {
-      throw ocupadosError
-    }
-
-    const vendidos = ocupados?.reduce(
-      (acc, c) => acc + (c.cantidad || 0),
-      0
-    ) || 0
+        if(ocupadosError){
+        throw ocupadosError
+        }
 
       if (vendidos >= config.total_boletos) {
         return sendError(res, 400, 'No quedan boletos disponibles')
@@ -443,19 +440,21 @@ app.get('/admin/compradores', requireAuth, async (req, res) => {
 
     let boletosMap = {}
 
-    if (ids.length) {
-      const { data: boletos, error: bErr } = await supabase
-        .from('boletos')
-        .select('compra_id, numero')
-        .in('compra_id', ids)
-
-      if (!bErr && boletos) {
-        boletos.forEach(b => {
-          if (!boletosMap[b.compra_id]) boletosMap[b.compra_id] = []
-          boletosMap[b.compra_id].push(b.numero)
-        })
+if (ids.length) {
+  const { data: boletos, error: bErr } = await supabase
+    .from('boletos')
+    .select('compra_id, numero')
+    .in('compra_id', ids)
+    .order('numero', { ascending:true })
+  if (!bErr && boletos) {
+    boletos.forEach(b => {
+      if (!boletosMap[b.compra_id]) {
+        boletosMap[b.compra_id] = []
       }
-    }
+      boletosMap[b.compra_id].push(b.numero)
+    })
+  }
+}
 
     const resultado = data.map(c => ({
       ...c,
