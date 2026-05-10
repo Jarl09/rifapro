@@ -1929,18 +1929,24 @@ document.querySelectorAll('.metodo-btn').forEach(btn => {
 const inputCantidad = document.getElementById('cantidadInput')
 
 function actualizarCantidad(n) {
-  cantidadActual = Math.max(CONFIG.minBoletos, parseInt(n) || CONFIG.minBoletos)
 
-  // Máximo permitido
+  cantidadActual = Math.max(
+    CONFIG.minBoletos,
+    parseInt(n) || CONFIG.minBoletos
+  )
+
   if (cantidadActual > 300) {
     cantidadActual = 300
     showMsg('msg', 'Máximo 300 boletos por compra', 'error')
   }
 
   inputCantidad.value = cantidadActual
-  document.getElementById('cantidad').value = cantidadActual
 
-  let total = cantidadActual * CONFIG.precio
+  document.getElementById('cantidad').value =
+    cantidadActual
+
+  let total =
+    cantidadActual * CONFIG.precio
 
   const metodo =
     document.getElementById('metodoPago').value
@@ -1950,12 +1956,13 @@ function actualizarCantidad(n) {
 
   if (metodo === 'paypal') {
 
-    const comision = cantidadActual * CONFIG.precio
+    const comision =
+      cantidadActual * CONFIG.precio
 
     total += comision
 
-   extraPaypal.textContent =
-  `PayPal suma RD$${CONFIG.precio.toLocaleString()} por cada boleto`
+    extraPaypal.textContent =
+      `PayPal suma RD$${CONFIG.precio.toLocaleString()} por cada boleto`
 
   } else {
 
@@ -1966,17 +1973,30 @@ function actualizarCantidad(n) {
   document.getElementById('totalCompra').textContent =
     'RD$ ' + total.toLocaleString()
 
-  document.getElementById('monto').value = total
+  document.getElementById('monto').value =
+    total
 }
 
 function actualizarTotalTemporal() {
 
-  let valor = parseInt(inputCantidad.value, 10) || 0
+  let valor =
+    parseInt(inputCantidad.value, 10) || 0
+
+  cantidadActual = valor
 
   if (valor > 300) {
+
     valor = 300
+
+    cantidadActual = 300
+
     inputCantidad.value = 300
-    showMsg('msg', 'Máximo 300 boletos por compra', 'error')
+
+    showMsg(
+      'msg',
+      'Máximo 300 boletos por compra',
+      'error'
+    )
   }
 
   const metodo =
@@ -1985,16 +2005,18 @@ function actualizarTotalTemporal() {
   const extraPaypal =
     document.getElementById('paypalExtra')
 
-  let total = valor * CONFIG.precio
+  let total =
+    valor * CONFIG.precio
 
   if (metodo === 'paypal') {
 
-    const comision = valor * CONFIG.precio
+    const comision =
+      valor * CONFIG.precio
 
     total += comision
 
-   extraPaypal.textContent =
-  `PayPal suma RD$${CONFIG.precio.toLocaleString()} por cada boleto`
+    extraPaypal.textContent =
+      `PayPal suma RD$${CONFIG.precio.toLocaleString()} por cada boleto`
 
   } else {
 
@@ -2002,13 +2024,46 @@ function actualizarTotalTemporal() {
 
   }
 
-  document.getElementById('cantidad').value = valor
+  document.getElementById('cantidad').value =
+    valor
 
   document.getElementById('totalCompra').textContent =
     'RD$ ' + total.toLocaleString()
 
-  document.getElementById('monto').value = total
+  document.getElementById('monto').value =
+    total
 }
+
+document.getElementById('btnMenos')
+.addEventListener('click', () => {
+  actualizarCantidad(cantidadActual - 1)
+})
+
+document.getElementById('btnMas')
+.addEventListener('click', () => {
+  actualizarCantidad(cantidadActual + 1)
+})
+
+inputCantidad.addEventListener('focus', () => {
+  inputCantidad.select()
+})
+
+inputCantidad.addEventListener('input', () => {
+
+  inputCantidad.value =
+    inputCantidad.value.replace(/\D/g, '')
+
+  actualizarTotalTemporal()
+})
+
+inputCantidad.addEventListener('blur', () => {
+  actualizarCantidad(inputCantidad.value)
+})
+
+document.getElementById('metodoPago')
+.addEventListener('change', () => {
+  actualizarCantidad(inputCantidad.value)
+})
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 async function cargarConfig() {
   try {
