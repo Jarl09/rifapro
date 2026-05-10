@@ -2188,71 +2188,84 @@ function fin(btn) {
 }
 
 // ─── VERIFICAR ───────────────────────────────────────────────────────────────
-btnVerificar.addEventListener('click',async()=>{
+btnVerificar.addEventListener('click', async () => {
 
-const valor=document.getElementById('v_telefono').value.trim()
-const resultado=document.getElementById('resultado')
+const valor = document.getElementById('v_telefono').value.trim()
+const resultado = document.getElementById('resultado')
 
-resultado.style.display='none'
-resultado.className=''
+console.log('VALOR:', valor)
 
-if(!valor){
-resultado.className='error'
-resultado.style.display='block'
-resultado.innerHTML='Escribe un teléfono o número de boleto'
+resultado.style.display = 'none'
+resultado.className = ''
+
+if (!valor) {
+resultado.className = 'error'
+resultado.style.display = 'block'
+resultado.innerHTML = 'Escribe un teléfono o número de boleto'
 return
 }
 
-try{
+try {
 
-resultado.className='ok'
-resultado.style.display='block'
-resultado.innerHTML='Verificando información...'
+resultado.className = 'ok'
+resultado.style.display = 'block'
+resultado.innerHTML = 'Verificando información...'
 
-const res=await fetch(`${API}/verificar`,{
+const res = await fetch(`${API}/verificar`, {
 method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({telefono:valor}),
+headers:{
+'Content-Type':'application/json'
+},
+body:JSON.stringify({
+valor: valor
+}),
 signal:AbortSignal.timeout(10000)
 })
 
-const data=await res.json()
+const data = await res.json()
 
-if(!res.ok){
-throw new Error(data.error||'Error al verificar')
+if (!res.ok) {
+throw new Error(data.error || 'Error verificando')
 }
 
-resultado.style.display='block'
+resultado.style.display = 'block'
 
-if(data.estado==='no_encontrado'){
-resultado.className='error'
-resultado.innerHTML=`
+if (data.estado === 'no_encontrado') {
+
+resultado.className = 'error'
+
+resultado.innerHTML = `
 <strong>Número no encontrado ❌</strong><br><br>
 No existe ninguna compra asociada a este teléfono o boleto.
 `
+
 return
 }
 
-if(data.estado==='error'){
-resultado.className='error'
-resultado.innerHTML=`
+if (data.estado === 'error') {
+
+resultado.className = 'error'
+
+resultado.innerHTML = `
 <strong>Error</strong><br><br>
-${data.mensaje||'No se pudo verificar la información'}
+${data.mensaje || 'No se pudo verificar la información'}
 `
+
 return
 }
 
-if(data.estado==='individual'){
+if (data.estado === 'individual') {
 
-const compra=data.compra
+const compra = data.compra
 
-let color='aprobado'
-if(compra.estado==='pendiente') color='pendiente'
-if(compra.estado==='rechazado') color='rechazado'
+let color = 'aprobado'
 
-resultado.className='ok'
+if (compra.estado === 'pendiente') color = 'pendiente'
+if (compra.estado === 'rechazado') color = 'rechazado'
 
-resultado.innerHTML=`
+resultado.className = 'ok'
+
+resultado.innerHTML = `
 <div class="resultado-seccion">
 
 <div class="resultado-titulo ${color}">
@@ -2270,35 +2283,43 @@ ${compra.fecha}
 </div>
 
 <div class="resultado-boletos">
+
+${compra.nombre ? `<strong>Participante:</strong> ${compra.nombre}<br>` : ''}
+
+${compra.telefono ? `<strong>Teléfono:</strong> ${compra.telefono}<br><br>` : ''}
+
 ${
-compra.estado==='aprobado'
+compra.estado === 'aprobado'
 ? `<strong>Boletos:</strong> ${compra.boletos.join(', ')}`
-: compra.estado==='pendiente'
+: compra.estado === 'pendiente'
 ? 'Tu comprobante está siendo revisado.'
 : 'El comprobante enviado fue rechazado.'
 }
+
 </div>
 
 </div>
+
 </div>
 `
+
 return
 }
 
-if(data.estado==='historial'){
+if (data.estado === 'historial') {
 
-resultado.className='ok'
+resultado.className = 'ok'
 
-let html=`
+let html = `
 <div class="resultado-persona">
 <div class="resultado-nombre">${data.nombre}</div>
 <div class="resultado-telefono">${data.telefono}</div>
 </div>
 `
 
-function renderGrupo(titulo,clase,items){
+function renderGrupo(titulo, clase, items) {
 
-if(!items||items.length===0) return ''
+if (!items || items.length === 0) return ''
 
 return `
 <div class="resultado-seccion">
@@ -2312,17 +2333,19 @@ ${items.map((item,index)=>`
 <div class="resultado-card ${clase}">
 
 <div class="resultado-fecha">
-Jugada #${index+1} • ${item.fecha}
+Jugada #${index + 1} • ${item.fecha}
 </div>
 
 <div class="resultado-boletos">
+
 ${
-clase==='aprobado'
+clase === 'aprobado'
 ? `<strong>Boletos:</strong> ${item.boletos.join(', ')}`
-: clase==='pendiente'
+: clase === 'pendiente'
 ? 'Tu comprobante está siendo revisado.'
 : 'El comprobante enviado fue rechazado.'
 }
+
 </div>
 
 </div>
@@ -2333,24 +2356,27 @@ clase==='aprobado'
 `
 }
 
-html+=renderGrupo('Compras aprobadas ✅','aprobado',data.aprobadas)
-html+=renderGrupo('Compras pendientes ⏳','pendiente',data.pendientes)
-html+=renderGrupo('Compras rechazadas ❌','rechazado',data.rechazadas)
+html += renderGrupo('Compras aprobadas ✅','aprobado',data.aprobadas)
+html += renderGrupo('Compras pendientes ⏳','pendiente',data.pendientes)
+html += renderGrupo('Compras rechazadas ❌','rechazado',data.rechazadas)
 
-resultado.innerHTML=html
+resultado.innerHTML = html
+
+return
 }
 
-}catch(err){
+} catch (err) {
 
-resultado.className='error'
-resultado.style.display='block'
+resultado.className = 'error'
+resultado.style.display = 'block'
 
-resultado.innerHTML=`
+resultado.innerHTML = `
 <strong>Error</strong><br><br>
-${err.message||'No se pudo verificar la información'}
+${err.message || 'No se pudo verificar la información'}
 `
 
 console.error(err)
+
 }
 
 })

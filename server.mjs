@@ -195,21 +195,31 @@ app.get('/progreso', async (req, res) => {
   }
 })
 
-app.post('/verificar', rateLimit({ windowMs: 60_000, max: 10 }), async (req, res) => {
+app.post('/verificar', async (req, res) => {
+
+  console.log('BODY:', req.body)
+
   try {
-    const valor = sanitizePhone(req.body.valor)
+    const valor = String(req.body?.valor || '').trim()
 
-if (valor.length < 4) {
-  return sendError(res, 400, 'Dato requerido')
-}
+    console.log('VALOR:', valor)
 
-const resultado = await buscarBoletos(valor)
+    if (!valor || valor.length < 4) {
+      return sendError(res, 400, 'Dato requerido')
+    }
+
+    const resultado = await buscarBoletos(valor)
+
     res.json(resultado)
 
   } catch (err) {
-    log.error('/verificar', err.message)
+
+    console.log(err)
+
     sendError(res, 500, 'Error verificando boletos')
+
   }
+
 })
 
 app.post('/comprar',
@@ -430,7 +440,7 @@ app.get('/admin/compradores', requireAuth, async (req, res) => {
       `)
       .eq('config_id', configActual.id)
       .in('estado', ['aprobado', 'pendiente', 'rechazado'])
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) throw error
 
@@ -438,20 +448,26 @@ app.get('/admin/compradores', requireAuth, async (req, res) => {
       .filter(c => c.estado === 'aprobado')
       .map(c => c.id)
 
-    let boletosMap = {}
+let boletosMap = {}
 
 if (ids.length) {
+
   const { data: boletos, error: bErr } = await supabase
     .from('boletos')
     .select('compra_id, numero')
     .in('compra_id', ids)
-    .order('numero', { ascending:true })
+    .order('numero', { ascending: true })
+
   if (!bErr && boletos) {
+
     boletos.forEach(b => {
+
       if (!boletosMap[b.compra_id]) {
         boletosMap[b.compra_id] = []
       }
+
       boletosMap[b.compra_id].push(b.numero)
+
     })
   }
 }
@@ -508,7 +524,7 @@ app.get('/admin/pendientes', requireAuth, async (req, res) => {
       `)
       .eq('config_id', configActual.id)
       .eq('estado', 'pendiente')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) throw error
 

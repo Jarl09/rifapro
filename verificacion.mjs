@@ -94,7 +94,16 @@ if(!compras||compras.length===0){
 return{estado:'no_encontrado'}
 }
 
+
 const resultado=crearGrupo()
+
+  const { data: compras } = await supabase
+    .from('compras')
+    .select('id, nombre, telefono, estado, created_at')
+    .eq('config_id', configActual.id)
+    .eq('telefono', entrada.replace(/\D/g,''))
+    .order('created_at', { ascending: false })
+
 
 for(const compraItem of compras){
 
