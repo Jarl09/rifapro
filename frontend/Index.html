@@ -1942,32 +1942,35 @@ function actualizarCantidad(n) {
 
   let total = cantidadActual * CONFIG.precio
 
-const metodo =
-  document.getElementById('metodoPago').value
+  const metodo =
+    document.getElementById('metodoPago').value
 
-const extraPaypal =
-  document.getElementById('paypalExtra')
+  const extraPaypal =
+    document.getElementById('paypalExtra')
 
-if (metodo === 'paypal') {
+  if (metodo === 'paypal') {
 
-  total += 100
+    const comision = cantidadActual * CONFIG.precio
 
-  extraPaypal.textContent =
-    '+ RD$100 comisión PayPal'
+    total += comision
 
-} else {
+   extraPaypal.textContent =
+  `PayPal suma RD$${CONFIG.precio.toLocaleString()} por cada boleto`
 
-  extraPaypal.textContent = ''
+  } else {
 
-}
+    extraPaypal.textContent = ''
 
-document.getElementById('totalCompra').textContent =
-  'RD$ ' + total.toLocaleString()
+  }
 
-document.getElementById('monto').value = total
+  document.getElementById('totalCompra').textContent =
+    'RD$ ' + total.toLocaleString()
+
+  document.getElementById('monto').value = total
 }
 
 function actualizarTotalTemporal() {
+
   let valor = parseInt(inputCantidad.value, 10) || 0
 
   if (valor > 300) {
@@ -1976,33 +1979,36 @@ function actualizarTotalTemporal() {
     showMsg('msg', 'Máximo 300 boletos por compra', 'error')
   }
 
-  const total = valor * CONFIG.precio
+  const metodo =
+    document.getElementById('metodoPago').value
+
+  const extraPaypal =
+    document.getElementById('paypalExtra')
+
+  let total = valor * CONFIG.precio
+
+  if (metodo === 'paypal') {
+
+    const comision = valor * CONFIG.precio
+
+    total += comision
+
+   extraPaypal.textContent =
+  `PayPal suma RD$${CONFIG.precio.toLocaleString()} por cada boleto`
+
+  } else {
+
+    extraPaypal.textContent = ''
+
+  }
 
   document.getElementById('cantidad').value = valor
+
   document.getElementById('totalCompra').textContent =
     'RD$ ' + total.toLocaleString()
 
   document.getElementById('monto').value = total
 }
-
-document.getElementById('btnMenos')
-  .addEventListener('click', () => actualizarCantidad(cantidadActual - 1))
-
-document.getElementById('btnMas')
-  .addEventListener('click', () => actualizarCantidad(cantidadActual + 1))
-
-inputCantidad.addEventListener('focus', () => {
-  inputCantidad.select()
-})
-
-inputCantidad.addEventListener('input', () => {
-  inputCantidad.value = inputCantidad.value.replace(/\D/g, '')
-  actualizarTotalTemporal()
-})
-
-inputCantidad.addEventListener('blur', () => {
-  actualizarCantidad(inputCantidad.value)
-})
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 async function cargarConfig() {
   try {
