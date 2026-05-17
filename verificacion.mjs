@@ -6,14 +6,18 @@ if(limpio.length<6) return limpio
 return `${limpio.slice(0,3)}****${limpio.slice(-2)}`
 }
 
-function formatearFecha(fecha){
-return new Date(fecha).toLocaleString('es-DO',{
-day:'2-digit',
-month:'long',
-year:'numeric',
-hour:'numeric',
-minute:'2-digit'
-})
+function formatearFecha(fecha) {
+
+  return new Date(fecha).toLocaleString('es-DO', {
+    timeZone: 'America/Santo_Domingo',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
+
 }
 
 async function obtenerBoletos(compraId,configId){
